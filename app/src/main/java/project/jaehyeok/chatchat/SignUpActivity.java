@@ -20,7 +20,7 @@ public class SignUpActivity extends AppCompatActivity {
 
     private EditText inputEmail;
     private EditText inputPassword;
-    private EditText confirmPassword;
+    private EditText inputConfirmPassword;
     private Button createAccount;
 
     private FirebaseAuth firebaseAuth = null;
@@ -33,10 +33,10 @@ public class SignUpActivity extends AppCompatActivity {
 
         inputEmail = findViewById(R.id.signUpInputEmail);
         inputPassword = findViewById(R.id.signUpInputPassword);
-        confirmPassword = findViewById(R.id.signUpConfirmPassword);
+        inputConfirmPassword = findViewById(R.id.signUpConfirmPassword);
         createAccount = findViewById(R.id.createAccount);
 
-        /* 파이어베이스 접근 권한 갖기 */
+        // 파이어베이스 접근 권한 갖기
         firebaseAuth = FirebaseAuth.getInstance();
     }
 
@@ -52,7 +52,7 @@ public class SignUpActivity extends AppCompatActivity {
                 String password = inputPassword.getText().toString().trim();
                 // 입력한 아이디와 비밀번호의 형식이 유효할때 계정을 생성한다
                 if (isValidEmail() && isConfirmedPassword()) {
-                    setCreateAccount(email, password);
+                    createAccount(email, password);
                 }
             }
         });
@@ -74,7 +74,7 @@ public class SignUpActivity extends AppCompatActivity {
     // 비밀번호 확인
     private boolean isConfirmedPassword() {
         String password = inputPassword.getText().toString().trim();
-        String checkPassword = confirmPassword.getText().toString().trim();
+        String checkPassword = inputConfirmPassword.getText().toString().trim();
         // 두번 입력한 비밀번호가 일치한지, 공백이 아닌지 확인
         if (password.isEmpty()) {
             return false;
@@ -87,14 +87,16 @@ public class SignUpActivity extends AppCompatActivity {
     }
 
     // 파이어베이스를 이용한 이메일 계정 생성
-    private void setCreateAccount(String email, String password) {
+    private void createAccount(String email, String password) {
         firebaseAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(SignUpActivity.this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            // 계정 생성완료, 로그인화면으로 이동
+                            // 계정 생성완료
                             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                            // 로그인화면으로 이동 후 이전화면(회원가입)으로 돌아오지 않도록 한다
+                            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                             startActivity(intent);
                             Toast.makeText(SignUpActivity.this, "가입완료", Toast.LENGTH_SHORT).show();
                         } else {
