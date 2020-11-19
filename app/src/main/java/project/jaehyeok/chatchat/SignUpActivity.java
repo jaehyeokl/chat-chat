@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
@@ -15,6 +16,9 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
+import java.util.function.ToDoubleBiFunction;
 
 public class SignUpActivity extends AppCompatActivity {
 
@@ -75,7 +79,7 @@ public class SignUpActivity extends AppCompatActivity {
     private boolean isConfirmedPassword() {
         String password = inputPassword.getText().toString().trim();
         String checkPassword = inputConfirmPassword.getText().toString().trim();
-        // 두번 입력한 비밀번호가 일치한지, 공백이 아닌지 확인
+        // 비밀번호, 비밀번호 확인란의 입력값이 일치한지 / 공백이 아닌지 확인
         if (password.isEmpty()) {
             return false;
         } else if (!password.equals(checkPassword)) {
@@ -99,10 +103,33 @@ public class SignUpActivity extends AppCompatActivity {
                             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                             startActivity(intent);
                             Toast.makeText(SignUpActivity.this, "가입완료", Toast.LENGTH_SHORT).show();
+//                            verificationEmail();
                         } else {
                             Toast.makeText(SignUpActivity.this, "계정 생성에 실패하였습니다", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
     }
+
+    // 계정 확인 메일 보내기
+    // TODO: 11/19/2020 인증 이메일을 보내기는 하지만, 이메일 확인과는 별개로 로그인이 바로 가능하다
+//    private void verificationEmail() {
+//        FirebaseUser user = firebaseAuth.getCurrentUser();
+//        user.sendEmailVerification()
+//                .addOnCompleteListener(new OnCompleteListener<Void>() {
+//                    @Override
+//                    public void onComplete(@NonNull Task<Void> task) {
+//                        if (task.isSuccessful()) {
+//                            Log.d("메일전송", "메일전송");
+//
+//                            // 계정 생성완료
+//                            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+//                            // 로그인화면으로 이동 후 이전화면(회원가입)으로 돌아오지 않도록 한다
+//                            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+//                            startActivity(intent);
+//                            Toast.makeText(SignUpActivity.this, "가입완료", Toast.LENGTH_SHORT).show();
+//                        }
+//                    }
+//                });
+//    }
 }

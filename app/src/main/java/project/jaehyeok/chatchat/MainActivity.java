@@ -111,16 +111,20 @@ public class MainActivity extends AppCompatActivity {
 
     // 이메일로 로그인
     private void signIn(String email, String password) {
+        // 파이어베이스 이메일을 통한 로그인 메소드
         firebaseAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(MainActivity.this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-//                            Intent intent = new Intent(getApplicationContext(), );
-//                            // 로그인 이후 백버튼을 통해 다시 로그인페이지로 돌아올 수 없도록 한다
-//                            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                            Intent intent = new Intent(getApplicationContext(), ChatListActivity.class);
+                            // 로그인 이후 백버튼을 통해 다시 로그인페이지로 돌아올 수 없도록 한다
+                            // task 의 액티비티를 모두 제거하고, 새로운 task 를 만든다
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
                         } else {
-                            Toast.makeText(MainActivity.this, "로그인 실패", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, "가입된 이메일이 아닙니다", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
@@ -174,12 +178,13 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    // 로그인 이후 이동할 UI 설정
+    // 구글 로그인 이후 이동할 UI 설정
     private void updateUI(FirebaseUser user) {
         if (user != null) {
-            Intent intent = new Intent(this, testActivity.class);
+            Intent intent = new Intent(this, ChatListActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
-            finish();
         }
     }
 }
