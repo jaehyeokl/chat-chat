@@ -33,8 +33,6 @@ public class ChatListActivity extends AppCompatActivity {
 
     private static final int CREATE_CHAT = 7000;
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,11 +71,17 @@ public class ChatListActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        // 채팅개설 버튼 클릭
+        // 채팅개설을 위한 정보를 입력하는 페이지로 이동
         addChatButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // 채팅 개설 페이지에서 생성한 채팅의 데이터를 realtime database 에 저장할 때
+                // 생성 계정을 식별하기 위한 uid 를 필요로 한다. 이를 위해 intent 를 통해 uid 를 전달해준다
+                ArrayList<String> userProfile = getCurrentUserProfile();
+                String uid = userProfile.get(1);
+
                 Intent intent = new Intent(getApplicationContext(), CreateChatActivity.class);
+                intent.putExtra("uid", uid);
                 startActivityForResult(intent, CREATE_CHAT);
             }
         });
