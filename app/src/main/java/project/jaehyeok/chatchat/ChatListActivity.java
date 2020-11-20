@@ -20,16 +20,21 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class ChatListActivity extends AppCompatActivity {
+
+    private Button addChatButton;
 
     private FirebaseAuth firebaseAuth = null;
     private FirebaseDatabase firebaseDatabase; // 데이터베이스 진입
     private DatabaseReference usersReference; // 데이터베이스경로 (path : users)
+    private DatabaseReference chatsReference; // 데이터베이스경로 (path : chats)
 
     private RecyclerView chatCategoryRecyclerview;
     private RecyclerChatCategoryAdapter chatCategoryAdapter;
-    private Button addChatButton;
+
+    private ArrayList<DataSnapshot> chatDataSnapShotList;
 
     private static final int CREATE_CHAT = 7000;
 
@@ -45,6 +50,7 @@ public class ChatListActivity extends AppCompatActivity {
         // 파이어베이스 realtime database 접근 설정
         firebaseDatabase = FirebaseDatabase.getInstance();
         usersReference = firebaseDatabase.getReference("users");
+        chatsReference = firebaseDatabase.getReference("chats");
         // String / Long / Double / Boolean / Map<String, Object> / List<Object>
 
 
@@ -57,13 +63,44 @@ public class ChatListActivity extends AppCompatActivity {
         verifyUserSavedDatabase(userProfile);
 
 
+        // 파이어베이스 realtime database 에서 채팅 목록 가져오기
+        // 리스트에 채팅데이터<DataSnapshot> 담아 리사이클러뷰의 어댑터로 전달한다
+        chatDataSnapShotList = new ArrayList<>();
+        chatsReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            // addListenerForSingleValueEvent 실행될때 딱 한번 경로의 데이터를 불러온다
+            // chats 경로에 저장된 모든 데이터(채팅)를 불러온다
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                for (DataSnapshot chatSnapShot: snapshot.getChildren()) {
+//                    System.out.println("////스냅샷/// : " + chatSnapShot);
+                    chatDataSnapShotList.add(chatSnapShot);
+//                    System.out.println("//// 리스트////: " + chatDataSnapShotList);
+                }
+
+                // 카테고리별 채팅 목록
+                // 채팅목록에 대하여 인기순, 검색결과, 최신순으로 가로스크롤 형태로 지원한다
+                chatCategoryRecyclerview = findViewById(R.id.chatCategoryRecyclerview);
+                chatCategoryAdapter = new RecyclerChatCategoryAdapter(chatDataSnapShotList); // 데이터 아직 없음
+                chatCategoryRecyclerview.setAdapter(chatCategoryAdapter);
+                LinearLayoutManager chatCategoryLayoutManager = new LinearLayoutManager(ChatListActivity.this, LinearLayoutManager.HORIZONTAL, false);
+                chatCategoryRecyclerview.setLayoutManager(chatCategoryLayoutManager);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+        System.out.println("///////////" + chatDataSnapShotList);
+
         // 카테고리별 채팅 목록
         // 채팅목록에 대하여 인기순, 검색결과, 최신순으로 가로스크롤 형태로 지원한다
-        chatCategoryRecyclerview = findViewById(R.id.chatCategoryRecyclerview);
-        chatCategoryAdapter = new RecyclerChatCategoryAdapter(); // 데이터 아직 없음
-        chatCategoryRecyclerview.setAdapter(chatCategoryAdapter);
-        LinearLayoutManager chatCategoryLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
-        chatCategoryRecyclerview.setLayoutManager(chatCategoryLayoutManager);
+//        chatCategoryRecyclerview = findViewById(R.id.chatCategoryRecyclerview);
+//        chatCategoryAdapter = new RecyclerChatCategoryAdapter(); // 데이터 아직 없음
+//        chatCategoryRecyclerview.setAdapter(chatCategoryAdapter);
+//        LinearLayoutManager chatCategoryLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+//        chatCategoryRecyclerview.setLayoutManager(chatCategoryLayoutManager);
 //        chatCategoryRecyclerview.scrollToPosition(1);
     }
 
@@ -85,6 +122,16 @@ public class ChatListActivity extends AppCompatActivity {
                 startActivityForResult(intent, CREATE_CHAT);
             }
         });
+
+        // 중첩 리사이클러뷰의 세로(채팅 목록) 아이템에 대한 클릭이벤트 처리
+//        RecyclerChatRoomAdapter adapter = null;
+//        adapter.setOnItemClickListener(new RecyclerChatRoomAdapter.OnItemClickListener() {
+//            @Override
+//            public void onItemCLick(View view, int position) {
+//
+//            }
+//        });
+
     }
 
     // 현재 로그인한 계정의 프로필을 리스트에 저장하여 반환한다

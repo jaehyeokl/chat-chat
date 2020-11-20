@@ -39,7 +39,6 @@ public class CreateChatActivity extends AppCompatActivity {
         // 파이어베이스 realtime database 접근 설정
         firebaseDatabase = FirebaseDatabase.getInstance();
         chatsReference = firebaseDatabase.getReference("chats");
-
     }
 
     @Override
