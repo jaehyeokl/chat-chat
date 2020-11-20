@@ -31,7 +31,6 @@ public class RecyclerChatCategoryAdapter extends RecyclerView.Adapter<RecyclerCh
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             // 뷰 객체에 대한 참조
-            textView = itemView.findViewById(R.id.textView2);
             // 중첩할 채팅목록 리사이클러뷰
             chatRoomRecyclerview = itemView.findViewById(R.id.chatRoomRecyclerview);
             chatRoomAdapter = new RecyclerChatRoomAdapter(); // 데이터 아직
@@ -57,7 +56,7 @@ public class RecyclerChatCategoryAdapter extends RecyclerView.Adapter<RecyclerCh
     // 만들어진 아이템에 보여줄 데이터를 반영한다
     @Override
     public void onBindViewHolder(@NonNull RecyclerChatCategoryAdapter.ViewHolder holder, int position) {
-        holder.textView.setText("안녕하세요" + position);
+//        holder.textView.setText("안녕하세요" + position);
     }
 
     // 전체 데이터(아이템) 개수를 리턴

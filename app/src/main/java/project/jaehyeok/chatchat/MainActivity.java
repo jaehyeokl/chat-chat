@@ -171,7 +171,6 @@ public class MainActivity extends AppCompatActivity {
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w("구글 로그인", "signInWithCredential:failure", task.getException());
-                            //Snackbar.make(mBinding.mainLayout, "Authentication Failed.", Snackbar.LENGTH_SHORT).show();
                             updateUI(null);
                         }
                     }
