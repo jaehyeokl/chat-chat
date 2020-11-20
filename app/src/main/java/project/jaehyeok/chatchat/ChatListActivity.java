@@ -5,7 +5,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -26,12 +29,18 @@ public class ChatListActivity extends AppCompatActivity {
 
     private RecyclerView chatCategoryRecyclerview;
     private RecyclerChatCategoryAdapter chatCategoryAdapter;
+    private Button addChatButton;
+
+    private static final int CREATE_CHAT = 7000;
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat_list);
+
+        addChatButton = findViewById(R.id.addChatButton);
 
         // 파이어베이스 접근 권한 갖기
         firebaseAuth = FirebaseAuth.getInstance();
@@ -40,7 +49,6 @@ public class ChatListActivity extends AppCompatActivity {
         usersReference = firebaseDatabase.getReference("users");
         // String / Long / Double / Boolean / Map<String, Object> / List<Object>
 
-        /* 데이터베이스에 유저 정보 저장하기 */
 
         // 현재 로그인한 사용자 프로필 가져오기
         // ex) [로그인제공업체, uid, name, email]
@@ -51,8 +59,7 @@ public class ChatListActivity extends AppCompatActivity {
         verifyUserSavedDatabase(userProfile);
 
 
-        /* 카테고리별 채팅 목록 */
-
+        // 카테고리별 채팅 목록
         // 채팅목록에 대하여 인기순, 검색결과, 최신순으로 가로스크롤 형태로 지원한다
         chatCategoryRecyclerview = findViewById(R.id.chatCategoryRecyclerview);
         chatCategoryAdapter = new RecyclerChatCategoryAdapter(); // 데이터 아직 없음
@@ -60,6 +67,20 @@ public class ChatListActivity extends AppCompatActivity {
         LinearLayoutManager chatCategoryLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
         chatCategoryRecyclerview.setLayoutManager(chatCategoryLayoutManager);
 //        chatCategoryRecyclerview.scrollToPosition(1);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // 채팅개설 버튼 클릭
+        addChatButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(getApplicationContext(), CreateChatActivity.class);
+                startActivityForResult(intent, CREATE_CHAT);
+            }
+        });
     }
 
     // 현재 로그인한 계정의 프로필을 리스트에 저장하여 반환한다
