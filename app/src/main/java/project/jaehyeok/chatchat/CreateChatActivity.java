@@ -13,6 +13,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.xml.transform.Result;
 
 public class CreateChatActivity extends AppCompatActivity {
@@ -23,7 +26,9 @@ public class CreateChatActivity extends AppCompatActivity {
 
     private FirebaseAuth firebaseAuth = null;
     private FirebaseDatabase firebaseDatabase; // 데이터베이스 진입
-    private DatabaseReference chatsReference; // 데이터베이스경로 (path : chats)
+    private DatabaseReference rootReference;
+
+    private String masterUid;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,7 +43,11 @@ public class CreateChatActivity extends AppCompatActivity {
         firebaseAuth = FirebaseAuth.getInstance();
         // 파이어베이스 realtime database 접근 설정
         firebaseDatabase = FirebaseDatabase.getInstance();
-        chatsReference = firebaseDatabase.getReference("chats");
+        rootReference = firebaseDatabase.getReference();
+
+        // 이전 (ChatListActivity) 에서 Intent 통해 전달한 전달받은 uid
+        Intent getIntent = getIntent();
+        masterUid = getIntent.getStringExtra("uid");
     }
 
     @Override
@@ -49,27 +58,64 @@ public class CreateChatActivity extends AppCompatActivity {
         createChatButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // DB에 채팅데이터 생성 후 이전 액티비티로 돌아가기
-                addNewChatToDB();
+                // 파이어베이스 데이터베이스에 새로운 채팅방의 데이터가 추가될때
+                // 해당 채팅방에 대한 참가멤버, 메세지에 대한 데이터도 함께 생성한다
+                // 이 때 채팅방이 가지는 key 값과 같은 key 값을 부여함으로써, 관련성을 확인 할 수 있도록 한다
+
+                // 채팅데이터 추가 및 key 값 반환받기
+                String newChatReferenceKey = addDataPathChats();
+                // 참가멤버, 메세지 데이터 생성(같은 key 값을 가지도록)
+                addDataPathMembers(newChatReferenceKey);
+                //addDataPathMessages(newChatReferenceKey);
+
                 setResult(RESULT_OK);
                 finish();
             }
         });
     }
 
-    private void addNewChatToDB() {
+    // 파이어베이스 realtime database (path: chats) 에 새로운 채팅방의 데이터를 추가한다
+    // 이때 데이터에 랜덤으로 부여되는 key(String)를 반환한다
+    // addDataPathMembers, addDataPathMessages 메소드의 인자로 사용하기 위해서
+    private String addDataPathChats() {
+        // DB 경로 chats 진입
+        DatabaseReference chatsReference = rootReference.child("chats");
+
         // Chat 객체에 들어갈 생성자 파라미터  = (만드는 계정 uid, 생성시간, 제목, 최대참가인원)
-        // 파이어베이스 리얼타임 데이터베이스의 path: chats 에 데이터 생성
-
-        // 이전 (ChatListActivity) 에서 Intent를 통해 전달한 전달받은 uid
-        Intent getIntent = getIntent();
-        String masterUid = getIntent.getStringExtra("uid");
-
         long createdAt = System.currentTimeMillis(); // 생성시간
         String title = inputChatTitle.getText().toString().trim(); // 제목
         int personnel = Integer.parseInt(inputChatPersonnel.getText().toString().trim()); // 정원
-
         Chat newChat = new Chat(masterUid, createdAt, title, personnel);
-        chatsReference.push().setValue(newChat);
+
+        // 파이어베이스 데이터베이스에서 새 채팅정보가 저장될 경로에 접근(push)하여
+        // 해당 위치에 Chat 객체와 데이터를 가지는 채팅데이터 추가(setValue)
+        DatabaseReference newChatReference = chatsReference.push();
+        newChatReference.setValue(newChat);
+
+        // 멤버, 메세지 데이터를 생성하는 메소드에서 같은 key 값을 사용할 수 있도록 반환한다
+        String newChatReferenceKey = newChatReference.getKey();
+        return newChatReferenceKey;
     }
+
+
+    // 파이어베이스 realtime database (path: members) 에 새로운 채팅참가인원 데이터를 추가한다
+    // 이때 인자로 입력받은 값을 추가할 데이터를 식별하기 위한 key 값으로 설정한다
+    private void addDataPathMembers(String key) {
+        // DB 경로 members 진입
+        DatabaseReference membersReference = rootReference.child("members");
+        // 인자로 받은 값을 key 값이 되도록 지정 후 데이터 추가
+        // 채팅방 최초 개설 / 참가인원으로 채팅방 마스터를 추가한다
+        Map<String, Boolean> map = new HashMap<>();
+        map.put(masterUid, true);
+        membersReference.child(key).setValue(map);
+    }
+
+
+    // 파이어베이스 realtime database (path: messages) 에 새로운 채팅메세지 데이터를 추가한다
+    // 이때 인자로 입력받은 값을 추가할 데이터를 식별하기 위한 key 값으로 설정한다
+    private void addDataPathMessages(String key) {
+        // DB 경로 messages 진입
+        DatabaseReference messagesReference = rootReference.child("messages");
+    }
+
 }

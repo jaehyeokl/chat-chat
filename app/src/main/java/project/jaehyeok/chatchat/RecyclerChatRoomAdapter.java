@@ -41,7 +41,7 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
     public class ViewHolder extends RecyclerView.ViewHolder {
         TextView textView;
 
-        public ViewHolder(@NonNull View itemView) {
+        public ViewHolder(@NonNull final View itemView) {
             super(itemView);
 
             // 아이템 클릭이벤트를 액티비티(ChatListActivity)에서 처리
@@ -51,8 +51,12 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
                     // 리사이클러뷰 목록에서 아이템의 포지션
                     int position = getAdapterPosition();
                     if (position != RecyclerView.NO_POSITION) {
-                        Toast.makeText(view.getContext(), position+"", Toast.LENGTH_SHORT).show();
-                        // 클릭했을떄, 채팅방에 입장
+                        // 채팅 목록의 아이템을 클릭했을때 채팅방으로 입장한다
+                        Intent intent = new Intent(view.getContext(), ChatActivity.class);
+                        view.getContext().startActivity(intent);
+
+
+
 
                         // 리스너 객체의 메서드를 호출한다
 //                        if (onItemClickListener != null) {
