@@ -119,6 +119,6 @@ public class CreateChatActivity extends AppCompatActivity {
         // 채팅방 최초 개설에 대한 전체 메세지를 추가한다
         String chatOpenMessage = "채팅방이 생성되었습니다!";
         Message chatOpenBroadcast = new Message(true, chatOpenMessage);
-        messagesReference.child(key).setValue(chatOpenBroadcast);
+        messagesReference.child(key).push().setValue(chatOpenBroadcast);
     }
 }
