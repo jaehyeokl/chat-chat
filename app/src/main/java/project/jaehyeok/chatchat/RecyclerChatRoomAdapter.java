@@ -56,10 +56,7 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
                         // 채팅 목록의 아이템을 클릭했을때 채팅방으로 입장한다
                         Intent intent = new Intent(view.getContext(), ChatActivity.class);
                         view.getContext().startActivity(intent);
-
                         Toast.makeText(view.getContext(), categoryPosition + "/" + position, Toast.LENGTH_SHORT).show();
-
-
 
 
                         // 리스너 객체의 메서드를 호출한다

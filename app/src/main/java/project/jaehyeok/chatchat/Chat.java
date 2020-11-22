@@ -2,17 +2,16 @@ package project.jaehyeok.chatchat;
 
 public class Chat {
     public String masterUid;
-    public long createAt;
+    public long timestamp = System.currentTimeMillis();
     public String title;
     public int personnel;
 
     public Chat() {
-        // Default constructor required for calls to DataSnapshot.getValue(User.class)
+        // Default constructor required for calls to DataSnapshot.getValue
     }
 
-    public Chat(String masterUid, long createAt, String title, int personnel) {
+    public Chat(String masterUid, String title, int personnel) {
         this.masterUid = masterUid;
-        this.createAt = createAt;
         this.title = title;
         this.personnel = personnel;
     }
@@ -25,12 +24,12 @@ public class Chat {
         this.masterUid = masterUid;
     }
 
-    public long getCreateAt() {
-        return createAt;
+    public long getTimestamp() {
+        return timestamp;
     }
 
-    public void setCreateAt(long createAt) {
-        this.createAt = createAt;
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
     }
 
     public String getTitle() {

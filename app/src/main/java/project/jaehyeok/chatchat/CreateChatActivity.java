@@ -66,7 +66,7 @@ public class CreateChatActivity extends AppCompatActivity {
                 String newChatReferenceKey = addDataPathChats();
                 // 참가멤버, 메세지 데이터 생성(같은 key 값을 가지도록)
                 addDataPathMembers(newChatReferenceKey);
-                //addDataPathMessages(newChatReferenceKey);
+                addDataPathMessages(newChatReferenceKey);
 
                 setResult(RESULT_OK);
                 finish();
@@ -81,11 +81,10 @@ public class CreateChatActivity extends AppCompatActivity {
         // DB 경로 chats 진입
         DatabaseReference chatsReference = rootReference.child("chats");
 
-        // Chat 객체에 들어갈 생성자 파라미터  = (만드는 계정 uid, 생성시간, 제목, 최대참가인원)
-        long createdAt = System.currentTimeMillis(); // 생성시간
+        // Chat 객체에 들어갈 생성자 파라미터  = (만드는 계정 uid, 제목, 최대참가인원)
         String title = inputChatTitle.getText().toString().trim(); // 제목
         int personnel = Integer.parseInt(inputChatPersonnel.getText().toString().trim()); // 정원
-        Chat newChat = new Chat(masterUid, createdAt, title, personnel);
+        Chat newChat = new Chat(masterUid, title, personnel);
 
         // 파이어베이스 데이터베이스에서 새 채팅정보가 저장될 경로에 접근(push)하여
         // 해당 위치에 Chat 객체와 데이터를 가지는 채팅데이터 추가(setValue)
@@ -105,9 +104,9 @@ public class CreateChatActivity extends AppCompatActivity {
         DatabaseReference membersReference = rootReference.child("members");
         // 인자로 받은 값을 key 값이 되도록 지정 후 데이터 추가
         // 채팅방 최초 개설 / 참가인원으로 채팅방 마스터를 추가한다
-        Map<String, String> map = new HashMap<>();
-        map.put(masterUid, "master");
-        membersReference.child(key).setValue(map);
+        Map<String, String> masterMap = new HashMap<>();
+        masterMap.put(masterUid, "master");
+        membersReference.child(key).setValue(masterMap);
     }
 
 
@@ -116,6 +115,10 @@ public class CreateChatActivity extends AppCompatActivity {
     private void addDataPathMessages(String key) {
         // DB 경로 messages 진입
         DatabaseReference messagesReference = rootReference.child("messages");
+        // 인자로 받은 값을 key 값이 되도록 지정 후 데이터 추가
+        // 채팅방 최초 개설에 대한 전체 메세지를 추가한다
+        String chatOpenMessage = "채팅방이 생성되었습니다!";
+        Message chatOpenBroadcast = new Message(true, chatOpenMessage);
+        messagesReference.child(key).setValue(chatOpenBroadcast);
     }
-
 }
