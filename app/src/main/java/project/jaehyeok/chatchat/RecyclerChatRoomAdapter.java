@@ -18,10 +18,12 @@ import java.util.ArrayList;
 // ChatListActivity 에서 채팅방 목록에 대한 리사이클러뷰 어댑터 (세로)
 public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRoomAdapter.ViewHolder> {
     ArrayList<DataSnapshot> chatDataSnapShotList = null;
+    int categoryPosition;
 
     // 생성자를 통해 목록에 나타낼 데이터를 전달 받는다
-    public RecyclerChatRoomAdapter(ArrayList<DataSnapshot> chatDataSnapShotList) {
+    public RecyclerChatRoomAdapter(ArrayList<DataSnapshot> chatDataSnapShotList, int categoryPosition) {
         this.chatDataSnapShotList = chatDataSnapShotList;
+        this.categoryPosition = categoryPosition;
     }
 
 //    // 리스너 인터페이스를 정의한 다음
@@ -54,6 +56,8 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
                         // 채팅 목록의 아이템을 클릭했을때 채팅방으로 입장한다
                         Intent intent = new Intent(view.getContext(), ChatActivity.class);
                         view.getContext().startActivity(intent);
+
+                        Toast.makeText(view.getContext(), categoryPosition + "/" + position, Toast.LENGTH_SHORT).show();
 
 
 

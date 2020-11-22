@@ -39,9 +39,9 @@ public class RecyclerChatCategoryAdapter extends RecyclerView.Adapter<RecyclerCh
             chatRoomRecyclerview = itemView.findViewById(R.id.chatRoomRecyclerview);
             // 액티비티에서(ChatListActivity) 전달받은 채팅목록 데이터를
             // 목록을 표기할 리사이클러뷰(중첩된)로 한번 더 전달한다
-            chatRoomAdapter = new RecyclerChatRoomAdapter(chatDataSnapShotList);
-            chatRoomRecyclerview.setAdapter(chatRoomAdapter);
-            chatRoomRecyclerview.setLayoutManager(new LinearLayoutManager(itemView.getContext()));
+//            chatRoomAdapter = new RecyclerChatRoomAdapter(chatDataSnapShotList);
+//            chatRoomRecyclerview.setAdapter(chatRoomAdapter);
+//            chatRoomRecyclerview.setLayoutManager(new LinearLayoutManager(itemView.getContext()));
         }
     }
 
@@ -63,6 +63,9 @@ public class RecyclerChatCategoryAdapter extends RecyclerView.Adapter<RecyclerCh
     @Override
     public void onBindViewHolder(@NonNull RecyclerChatCategoryAdapter.ViewHolder holder, int position) {
 //        holder.textView.setText("안녕하세요" + position);
+        holder.chatRoomAdapter = new RecyclerChatRoomAdapter(chatDataSnapShotList, position);
+        holder.chatRoomRecyclerview.setAdapter(holder.chatRoomAdapter);
+        holder.chatRoomRecyclerview.setLayoutManager(new LinearLayoutManager(holder.itemView.getContext()));
     }
 
     // 전체 데이터(아이템) 개수를 리턴

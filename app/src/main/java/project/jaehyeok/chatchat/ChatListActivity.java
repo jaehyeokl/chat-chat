@@ -1,15 +1,21 @@
 package project.jaehyeok.chatchat;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserInfo;
@@ -62,9 +68,16 @@ public class ChatListActivity extends AppCompatActivity {
         // 최초 로그인일때 파이어베이스 DB 의 경로 users 에 새로운 유저 데이터를 생성한다
         verifyUserSavedDatabase(userProfile);
 
+//        chatCategoryRecyclerview.scrollToPosition(1);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
 
         // 파이어베이스 realtime database 에서 채팅 목록 가져오기
         // 리스트에 채팅데이터<DataSnapshot> 담아 리사이클러뷰의 어댑터로 전달한다
+        // 해당 액티비티로 전환될 때 마다 추가된 데이터를 목록에 최신화하여 보여주기 위해 onResume 에서 구현
         chatDataSnapShotList = new ArrayList<>();
         chatsReference.addListenerForSingleValueEvent(new ValueEventListener() {
             // addListenerForSingleValueEvent 실행될때 딱 한번 경로의 데이터를 불러온다
@@ -80,7 +93,7 @@ public class ChatListActivity extends AppCompatActivity {
                 // 카테고리별 채팅 목록
                 // 채팅목록에 대하여 인기순, 검색결과, 최신순으로 가로스크롤 형태로 지원한다
                 chatCategoryRecyclerview = findViewById(R.id.chatCategoryRecyclerview);
-                chatCategoryAdapter = new RecyclerChatCategoryAdapter(chatDataSnapShotList); // 데이터 아직 없음
+                chatCategoryAdapter = new RecyclerChatCategoryAdapter(chatDataSnapShotList);
                 chatCategoryRecyclerview.setAdapter(chatCategoryAdapter);
                 LinearLayoutManager chatCategoryLayoutManager = new LinearLayoutManager(ChatListActivity.this, LinearLayoutManager.HORIZONTAL, false);
                 chatCategoryRecyclerview.setLayoutManager(chatCategoryLayoutManager);
@@ -91,22 +104,6 @@ public class ChatListActivity extends AppCompatActivity {
 
             }
         });
-
-        System.out.println("///////////" + chatDataSnapShotList);
-
-        // 카테고리별 채팅 목록
-        // 채팅목록에 대하여 인기순, 검색결과, 최신순으로 가로스크롤 형태로 지원한다
-//        chatCategoryRecyclerview = findViewById(R.id.chatCategoryRecyclerview);
-//        chatCategoryAdapter = new RecyclerChatCategoryAdapter(); // 데이터 아직 없음
-//        chatCategoryRecyclerview.setAdapter(chatCategoryAdapter);
-//        LinearLayoutManager chatCategoryLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
-//        chatCategoryRecyclerview.setLayoutManager(chatCategoryLayoutManager);
-//        chatCategoryRecyclerview.scrollToPosition(1);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
 
         // 채팅개설을 위한 정보를 입력하는 페이지로 이동
         addChatButton.setOnClickListener(new View.OnClickListener() {
@@ -131,6 +128,18 @@ public class ChatListActivity extends AppCompatActivity {
 //
 //            }
 //        });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // 채팅방 생성 후 현재 액티비티로 돌아왔을때
+        // 데이터베이스로부터 리사이클러뷰 채팅목록을 새로 전달받고
+        // 생성한 채팅방을 유저가 볼 수 있도록 최신순(가로 목록) 가장 상단을 표시하도록 한다
+        if (requestCode == CREATE_CHAT && resultCode == RESULT_OK) {
+
+        }
 
     }
 

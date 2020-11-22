@@ -105,8 +105,8 @@ public class CreateChatActivity extends AppCompatActivity {
         DatabaseReference membersReference = rootReference.child("members");
         // 인자로 받은 값을 key 값이 되도록 지정 후 데이터 추가
         // 채팅방 최초 개설 / 참가인원으로 채팅방 마스터를 추가한다
-        Map<String, Boolean> map = new HashMap<>();
-        map.put(masterUid, true);
+        Map<String, String> map = new HashMap<>();
+        map.put(masterUid, "master");
         membersReference.child(key).setValue(map);
     }
 
