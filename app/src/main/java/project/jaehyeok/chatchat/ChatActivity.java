@@ -11,7 +11,10 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserInfo;
@@ -23,9 +26,14 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ChatActivity extends AppCompatActivity {
 
+    private TextView chatRoomTitle;
+    private TextView chatRoomCurrentCount;
+    private TextView chatRoomPersonnel;
     private EditText inputChatMessage;
     private Button sendMessageButton;
 
@@ -46,6 +54,9 @@ public class ChatActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
+        chatRoomTitle = findViewById(R.id.chatRoomTitle);
+        chatRoomCurrentCount = findViewById(R.id.chatRoomCurrentCount);
+        chatRoomPersonnel = findViewById(R.id.chatRoomPersonnel);
         inputChatMessage = findViewById(R.id.inputChatMessage);
         sendMessageButton = findViewById(R.id.sendMessageButton);
 
@@ -64,6 +75,60 @@ public class ChatActivity extends AppCompatActivity {
         Intent getIntent = getIntent();
         databaseChatKey = getIntent.getStringExtra("ChatKey");
 
+        // 데이터베이스 chats 에서 데이터 가져와 TextView 에 초기화하기
+        // 가져온 데이터의 채팅방 정원을 확인하여 현재 유저가 참가할 수 있는지 체크한다
+        rootReference.child("chats").child(databaseChatKey).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Chat chat = snapshot.getValue(Chat.class);
+                String title = chat.getTitle();
+                final String masterUid = chat.getMasterUid();
+                final int personnel = chat.getPersonnel();
+
+                // 채팅방 타이틀 최대인원 초기화
+                chatRoomTitle.setText(title);
+                chatRoomPersonnel.setText(personnel + "");
+
+                // 1차적으로 채팅 목록에서 최대인원일때 들어올 수 없도록 하되, 리사이클러뷰에서 반영되지 않은 상태에서 유저가 들어올 여지가 있음
+                // 2차 체크 -> 현재 채팅방 참가인원과 최대 참가인원(personnel)을 비교하여 유저의 채팅방 참가 여부를 결정한다
+                // 입장 가능할때, members 에 유저 참가 데이터를 생성하고, 유저 참가 메세지를 broadcast 되도록 한다
+                rootReference.child("members").child(databaseChatKey).addListenerForSingleValueEvent(new ValueEventListener() {
+                    // 데이터베이스 members 에서 현재 채팅방 참가인원 불러오기
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        long chatMemberCount = (int) snapshot.getChildrenCount();
+
+                        if (uid.equals(masterUid)) {
+                            // 마스터는 인원 상관없이 입장
+                        } else {
+                            // 마스터 아닐때
+                            if (chatMemberCount < personnel) {
+                                // 현재 인원 textView 초기화
+                                chatRoomCurrentCount.setText(chatMemberCount + "");
+                                // 참가인원이 정원보다 적을때 유저 채팅방 참가 및 DB 추가
+                                Map<String, Object> userMap = new HashMap<>();
+                                userMap.put(uid, true);
+                                rootReference.child("members").child(databaseChatKey).updateChildren(userMap);
+                            } else {
+                                finish();
+                                Toast.makeText(ChatActivity.this, "채팅방 인원이 초과되었습니다", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
         // 채팅방의 메세지를 보여주는 리사이클러뷰
         // addChildEventListener 을 통해 가장 첫 이벤트로 전체 채팅 데이터를 불러온다
         // 이후 해당 채팅방에서 메세지가 추가될 때 마다 발생하는 이벤트를 통해 추가되는 메세지를 보여준다
@@ -78,7 +143,7 @@ public class ChatActivity extends AppCompatActivity {
                 chatMessages.add(message);
 
                 chatMessageRecyclerview = findViewById(R.id.chatMessageRecyclerview);
-                chatMessageAdapter = new RecyclerChatMessageAdapter(chatMessages);
+                chatMessageAdapter = new RecyclerChatMessageAdapter(chatMessages, uid);
                 chatMessageRecyclerview.setAdapter(chatMessageAdapter);
                 chatMessageRecyclerview.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
                 // 채팅 추가될 때 마다 추가된 메세지로 화면 이동 (리사이클러뷰 가장 마지막 아이템 보여주기)
@@ -113,18 +178,6 @@ public class ChatActivity extends AppCompatActivity {
 
         // Members 에서 최대 인원 가져오기
 //        rootReference.child("members");
-
-        // Messages 에서 채팅 내역 올리기
-        // messages 의 데이터 변경 이벤트 수신
-
-
-
-
-
-
-
-
-
     }
 
     @Override

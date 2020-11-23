@@ -49,4 +49,6 @@ dependencies {
     implementation "com.airbnb.android:lottie:3.4.0"
     // 파이어베이스 데이터베이스
     implementation 'com.google.firebase:firebase-database'
+    //noinspection GradleCompatible
+    implementation "com.android.support:design:27.0.0"
 }
