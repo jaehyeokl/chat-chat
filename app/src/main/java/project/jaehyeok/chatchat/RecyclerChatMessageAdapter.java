@@ -9,6 +9,12 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 import java.util.ArrayList;
 
 public class RecyclerChatMessageAdapter extends RecyclerView.Adapter<RecyclerChatMessageAdapter.ViewHolder> {
@@ -22,14 +28,19 @@ public class RecyclerChatMessageAdapter extends RecyclerView.Adapter<RecyclerCha
 
     // 아이템 뷰를 저장하는 뷰홀더 클래스
     public class ViewHolder extends RecyclerView.ViewHolder {
-        //
-        TextView name;
-        TextView chatMessage;
+        private TextView name;
+        private TextView chatMessage;
+
+        private FirebaseDatabase firebaseDatabase; // 데이터베이스 진입
+        private DatabaseReference usersReference;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             name = itemView.findViewById(R.id.name);
             chatMessage = itemView.findViewById(R.id.chatMessage);
+            // 파이어베이스 realtime database 접근 설정
+            firebaseDatabase = FirebaseDatabase.getInstance();
+            usersReference = firebaseDatabase.getReference("users");
         }
     }
 
@@ -49,22 +60,37 @@ public class RecyclerChatMessageAdapter extends RecyclerView.Adapter<RecyclerCha
 
     // 만들어진 아이템에 보여줄 데이터를 반영한다
     @Override
-    public void onBindViewHolder(@NonNull RecyclerChatMessageAdapter.ViewHolder holder, int position) {
-        if (chatMessageList != null) {
-            Message message = chatMessageList.get(position);
-            holder.name.setText(message.getName());
-            holder.chatMessage.setText(message.getMessage());
+    public void onBindViewHolder(@NonNull final RecyclerChatMessageAdapter.ViewHolder holder, int position) {
+        Message message = chatMessageList.get(position);
+        holder.chatMessage.setText(message.getMessage());
+        String uid = message.getUid();
+
+        if (uid != null) {
+            holder.usersReference.child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    UserData userData = snapshot.getValue(UserData.class);
+                    String userName = userData.getName();
+
+                    if (userName != null) {
+                        holder.name.setText(userName);
+                    } else {
+                        holder.name.setText(userData.getEmail());
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            });
         }
     }
 
     // 전체 데이터(아이템) 개수를 리턴
     @Override
     public int getItemCount() {
-        if (chatMessageList != null) {
-            return chatMessageList.size();
-        } else {
-            return 0;
-        }
+        return chatMessageList.size();
     }
 
 }

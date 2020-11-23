@@ -2,7 +2,7 @@ package project.jaehyeok.chatchat;
 
 public class Message {
     public boolean broadcast = false;
-    public String name;
+    public String uid;
     public String message;
     public long timestamp = System.currentTimeMillis();
 
@@ -11,8 +11,8 @@ public class Message {
     }
 
     // 유저 메세지 생성
-    public Message(String name, String message) {
-        this.name = name;
+    public Message(String uid, String message) {
+        this.uid = uid;
         this.message = message;
     }
 
@@ -30,12 +30,12 @@ public class Message {
         this.broadcast = broadcast;
     }
 
-    public String getName() {
-        return name;
+    public String getUid() {
+        return uid;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setUid(String uid) {
+        this.uid = uid;
     }
 
     public String getMessage() {
