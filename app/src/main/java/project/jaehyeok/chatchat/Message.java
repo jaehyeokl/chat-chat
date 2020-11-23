@@ -3,6 +3,8 @@ package project.jaehyeok.chatchat;
 public class Message {
     public boolean broadcast = false;
     public String uid;
+    // 이메일 또는 닉네임
+    public String showName;
     public String message;
     public long timestamp = System.currentTimeMillis();
 
@@ -11,8 +13,9 @@ public class Message {
     }
 
     // 유저 메세지 생성
-    public Message(String uid, String message) {
+    public Message(String uid, String showName ,String message) {
         this.uid = uid;
+        this.showName = showName;
         this.message = message;
     }
 
@@ -36,6 +39,14 @@ public class Message {
 
     public void setUid(String uid) {
         this.uid = uid;
+    }
+
+    public String getShowName() {
+        return showName;
+    }
+
+    public void setShowName(String showName) {
+        this.showName = showName;
     }
 
     public String getMessage() {

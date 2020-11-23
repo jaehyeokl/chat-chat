@@ -94,7 +94,7 @@ public class ChatActivity extends AppCompatActivity {
         rootReference.child("messages").child(databaseChatKey).addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                System.out.println("/////////////////add : " + snapshot);
+                //System.out.println("/////////////////add : " + snapshot);
                 Message message = snapshot.getValue(Message.class);
                 chatMessages.add(message);
 
@@ -154,14 +154,35 @@ public class ChatActivity extends AppCompatActivity {
         sendMessageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // Message 객체 생성 후 데이터베이스 경로 messages 에 추가
-                // Message 객체 생성 시 인자로 유저 uid 와 입력한 내용을 넣어준다
-                String inputMessage = inputChatMessage.getText().toString().trim();
-                DatabaseReference messagesReference = rootReference.child("messages");
-                Message chatOpenBroadcast = new Message(uid, inputMessage);
-                messagesReference.child(databaseChatKey).push().setValue(chatOpenBroadcast);
+                // Message(uid, 작성자이름, 입력내용) 객체 데이터베이스 경로 messages 에 추가
+                final String inputMessage = inputChatMessage.getText().toString().trim();
 
-                inputChatMessage.setText(null);
+                // 인자에 들어갈 작성자 이름을 users 데이터베이스에서 구한다음 Message 객체 생성한다
+                rootReference.child("users").child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        UserData userData = snapshot.getValue(UserData.class);
+                        String userName = userData.getName();
+                        Message chatMessage = new Message(uid, userName, inputMessage);
+
+                        // 유저 닉네임이 설정되어 있지 않을때
+                        // 채팅방에서 메세지작성자로 이메일을 표시한다
+                        if (userName == null) {
+                            String userEmail = userData.getEmail();
+                            chatMessage.setShowName(userEmail);
+                        }
+
+                        DatabaseReference messagesReference = rootReference.child("messages");
+                        messagesReference.child(databaseChatKey).push().setValue(chatMessage);
+
+                        inputChatMessage.setText(null);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
             }
         });
     }

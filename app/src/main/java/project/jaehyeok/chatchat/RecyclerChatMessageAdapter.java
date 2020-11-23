@@ -60,31 +60,33 @@ public class RecyclerChatMessageAdapter extends RecyclerView.Adapter<RecyclerCha
 
     // 만들어진 아이템에 보여줄 데이터를 반영한다
     @Override
-    public void onBindViewHolder(@NonNull final RecyclerChatMessageAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerChatMessageAdapter.ViewHolder holder, int position) {
         Message message = chatMessageList.get(position);
         holder.chatMessage.setText(message.getMessage());
+        holder.name.setText(message.getShowName());
+
+        // 나중에 프사 받아올때 쓰일듯함
         String uid = message.getUid();
-
-        if (uid != null) {
-            holder.usersReference.child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    UserData userData = snapshot.getValue(UserData.class);
-                    String userName = userData.getName();
-
-                    if (userName != null) {
-                        holder.name.setText(userName);
-                    } else {
-                        holder.name.setText(userData.getEmail());
-                    }
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-
-                }
-            });
-        }
+//        if (uid != null) {
+//            holder.usersReference.child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
+//                @Override
+//                public void onDataChange(@NonNull DataSnapshot snapshot) {
+//                    UserData userData = snapshot.getValue(UserData.class);
+//                    String userName = userData.getName();
+//
+//                    if (userName != null) {
+//                        holder.name.setText(userName);
+//                    } else {
+//                        holder.name.setText(userData.getEmail());
+//                    }
+//                }
+//
+//                @Override
+//                public void onCancelled(@NonNull DatabaseError error) {
+//
+//                }
+//            });
+//        }
     }
 
     // 전체 데이터(아이템) 개수를 리턴
