@@ -64,37 +64,16 @@ public class ChatActivity extends AppCompatActivity {
         Intent getIntent = getIntent();
         databaseChatKey = getIntent.getStringExtra("ChatKey");
 
-        // 메세지 목록 리사이클러뷰
-        chatMessages = new ArrayList<>();
-        // 채팅방 처음 참가했을때, 채팅 내역 불러와 목록에 보여주기
-//        rootReference.child("messages").child(databaseChatKey).addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot snapshot) {
-//                for (DataSnapshot messageSnapShot: snapshot.getChildren()) {
-//                    // 리사이클러뷰의 데이터로 저장하기 위해 각 메세지를 메세지 객체로 변환하여 리스트에 저장한다
-//                    Message message = messageSnapShot.getValue(Message.class);
-//                    chatMessages.add(message);
-//                    //System.out.println(message.getMessage());
-//                }
-//
-//                // 리사이클러뷰 리스트 적용했으니 데이터 새로고침만 해주기
-//                chatMessageRecyclerview = findViewById(R.id.chatMessageRecyclerview);
-//                chatMessageAdapter = new RecyclerChatMessageAdapter(chatMessages);
-//                chatMessageRecyclerview.setAdapter(chatMessageAdapter);
-//                chatMessageRecyclerview.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError error) {
-//
-//            }
-//        });
+        // 채팅방의 메세지를 보여주는 리사이클러뷰
+        // addChildEventListener 을 통해 가장 첫 이벤트로 전체 채팅 데이터를 불러온다
+        // 이후 해당 채팅방에서 메세지가 추가될 때 마다 발생하는 이벤트를 통해 추가되는 메세지를 보여준다
+        chatMessages = new ArrayList<>(); // 리사이클러뷰 데이터
 
-        // 새로운 채팅이 추가됐을때
         rootReference.child("messages").child(databaseChatKey).addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
                 //System.out.println("/////////////////add : " + snapshot);
+                // 데이터베이스에서 리스너를 통해 데이터를 제공하는 방식 DataSnapshot 을 객체로 변환하기
                 Message message = snapshot.getValue(Message.class);
                 chatMessages.add(message);
 
@@ -102,6 +81,8 @@ public class ChatActivity extends AppCompatActivity {
                 chatMessageAdapter = new RecyclerChatMessageAdapter(chatMessages);
                 chatMessageRecyclerview.setAdapter(chatMessageAdapter);
                 chatMessageRecyclerview.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
+                // 채팅 추가될 때 마다 추가된 메세지로 화면 이동 (리사이클러뷰 가장 마지막 아이템 보여주기)
+                chatMessageRecyclerview.scrollToPosition(chatMessageAdapter.getItemCount() - 1);
             }
 
             @Override
