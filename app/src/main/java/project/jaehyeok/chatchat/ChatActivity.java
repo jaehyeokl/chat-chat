@@ -31,6 +31,7 @@ import java.util.Map;
 
 public class ChatActivity extends AppCompatActivity {
 
+    private Button chatRoomBackButton;
     private TextView chatRoomTitle;
     private TextView chatRoomCurrentCount;
     private TextView chatRoomPersonnel;
@@ -54,6 +55,7 @@ public class ChatActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
+        chatRoomBackButton = findViewById(R.id.chatRoomBackButton);
         chatRoomTitle = findViewById(R.id.chatRoomTitle);
         chatRoomCurrentCount = findViewById(R.id.chatRoomCurrentCount);
         chatRoomPersonnel = findViewById(R.id.chatRoomPersonnel);
@@ -74,6 +76,21 @@ public class ChatActivity extends AppCompatActivity {
         // 데이터베이스에서 현재 채팅에 대한 메세지, 멤버에 접근하기 위한 채팅의 key 값
         Intent getIntent = getIntent();
         databaseChatKey = getIntent.getStringExtra("ChatKey");
+
+        // 데이터베이스 members 조회하여 현재 채팅방 참가인원 초기화 및
+        // 인원 변경내용 반영하기
+        rootReference.child("members").child(databaseChatKey).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                int currentUserCount = (int) snapshot.getChildrenCount();
+                chatRoomCurrentCount.setText(currentUserCount + "");
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
 
         // 데이터베이스 chats 에서 데이터 가져와 TextView 에 초기화하기
         // 가져온 데이터의 채팅방 정원을 확인하여 현재 유저가 참가할 수 있는지 체크한다
@@ -103,8 +120,6 @@ public class ChatActivity extends AppCompatActivity {
                         } else {
                             // 마스터 아닐때
                             if (chatMemberCount < personnel) {
-                                // 현재 인원 textView 초기화
-                                chatRoomCurrentCount.setText(chatMemberCount + "");
                                 // 참가인원이 정원보다 적을때 유저 채팅방 참가 및 DB 추가
                                 Map<String, Object> userMap = new HashMap<>();
                                 userMap.put(uid, true);
@@ -170,14 +185,6 @@ public class ChatActivity extends AppCompatActivity {
 
             }
         });
-
-
-
-        // Chats 에서 채팅 타이틀 가져오기
-//        rootReference.child("chats");
-
-        // Members 에서 최대 인원 가져오기
-//        rootReference.child("members");
     }
 
     @Override
@@ -191,32 +198,42 @@ public class ChatActivity extends AppCompatActivity {
                 // Message(uid, 작성자이름, 입력내용) 객체 데이터베이스 경로 messages 에 추가
                 final String inputMessage = inputChatMessage.getText().toString().trim();
 
-                // 인자에 들어갈 작성자 이름을 users 데이터베이스에서 구한다음 Message 객체 생성한다
-                rootReference.child("users").child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        UserData userData = snapshot.getValue(UserData.class);
-                        String userName = userData.getName();
-                        Message chatMessage = new Message(uid, userName, inputMessage);
+                if (inputMessage != null && inputMessage.length() > 0) {
+                    // 인자에 들어갈 작성자 이름을 users 데이터베이스에서 구한다음 Message 객체 생성한다
+                    rootReference.child("users").child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            UserData userData = snapshot.getValue(UserData.class);
+                            String userName = userData.getName();
+                            Message chatMessage = new Message(uid, userName, inputMessage);
 
-                        // 유저 닉네임이 설정되어 있지 않을때
-                        // 채팅방에서 메세지작성자로 이메일을 표시한다
-                        if (userName == null) {
-                            String userEmail = userData.getEmail();
-                            chatMessage.setShowName(userEmail);
+                            // 유저 닉네임이 설정되어 있지 않을때
+                            // 채팅방에서 메세지작성자로 이메일을 표시한다
+                            if (userName == null) {
+                                String userEmail = userData.getEmail();
+                                chatMessage.setShowName(userEmail);
+                            }
+
+                            DatabaseReference messagesReference = rootReference.child("messages");
+                            messagesReference.child(databaseChatKey).push().setValue(chatMessage);
+
+                            inputChatMessage.setText(null);
                         }
 
-                        DatabaseReference messagesReference = rootReference.child("messages");
-                        messagesReference.child(databaseChatKey).push().setValue(chatMessage);
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
 
-                        inputChatMessage.setText(null);
-                    }
+                        }
+                    });
+                }
+            }
+        });
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-
-                    }
-                });
+        // 백버튼 눌렀을때 뒤로 이동
+        chatRoomBackButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onBackPressed();
             }
         });
     }
@@ -247,5 +264,45 @@ public class ChatActivity extends AppCompatActivity {
             // 로그인 하지 않았음
         }
         return userProfile;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        // 일단은 opPause 일때 채팅방 나가기
+        // 이후에 백그라운드에서 구현해보도록 하자
+        rootReference.child("members").child(databaseChatKey).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                try{
+                    String uidState = (String) snapshot.child(uid).getValue();
+                    if (uidState.equals("master")) {
+                        // 방장일때는 채팅에서 최장하더라도 데이터베이스에서 삭제하지 않는다
+                    }
+                }catch (Exception e){
+                    e.printStackTrace();
+                    // try 에서 uid 의 String 형변환에 실패했을때
+                    // value 로 true (boolean) 값을 가지는 일반 채팅 참가 유저인 경우이다
+                    // boolean 으로 형변환 하여 채팅방에서 데이터를 삭제한다
+
+                    if (snapshot.child(uid).getValue() != null) {
+                        boolean uidState = (boolean) snapshot.child(uid).getValue();
+                        if (uidState) {
+                            rootReference.child("members").child(databaseChatKey).child(uid).setValue(null);
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+
+
+
     }
 }

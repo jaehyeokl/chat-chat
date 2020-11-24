@@ -67,7 +67,6 @@ public class ChatListActivity extends AppCompatActivity {
         // 파이어베이스 DB 에서 uid 를 통해 계정 데이터의 저장여부를 확인 / 최초 로그인 여부를 판별한다
         // 최초 로그인일때 파이어베이스 DB 의 경로 users 에 새로운 유저 데이터를 생성한다
         verifyUserSavedDatabase(userProfile);
-
 //        chatCategoryRecyclerview.scrollToPosition(1);
     }
 

@@ -97,6 +97,9 @@ public class RecyclerChatMessageAdapter extends RecyclerView.Adapter<RecyclerCha
             }
         } else {
             // 전체메세지일때
+            holder.chatUserName.setVisibility(View.GONE);
+            holder.chatMessageOther.setVisibility(View.GONE);
+            holder.chatMessageUser.setVisibility(View.GONE);
         }
 
         // 현재 메세지의 작성자를 전역변수인 checkPreviousUid 으로 저장해 놓는다
