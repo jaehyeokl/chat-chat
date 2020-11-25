@@ -106,7 +106,8 @@ public class ChatActivity extends AppCompatActivity {
                 chatRoomTitle.setText(title);
                 chatRoomPersonnel.setText(personnel + "");
 
-                // 1차적으로 채팅 목록에서 최대인원일때 들어올 수 없도록 하되, 리사이클러뷰에서 반영되지 않은 상태에서 유저가 들어올 여지가 있음
+                // 1차적으로 참가인원이 정원일때 채팅목록에서 참가할 수 없도록 하지만, 제한인원까지 참가 하기 전
+                // 목록에 아이템이 초기화 되고 이후에 정원이 찼을때는 ChatActivity 에서 2차적으로 처리할 수 있도록 한다
                 // 2차 체크 -> 현재 채팅방 참가인원과 최대 참가인원(personnel)을 비교하여 유저의 채팅방 참가 여부를 결정한다
                 // 입장 가능할때, members 에 유저 참가 데이터를 생성하고, 유저 참가 메세지를 broadcast 되도록 한다
                 rootReference.child("members").child(databaseChatKey).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -115,19 +116,22 @@ public class ChatActivity extends AppCompatActivity {
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         long chatMemberCount = (int) snapshot.getChildrenCount();
 
-                        if (uid.equals(masterUid)) {
-                            // 마스터는 인원 상관없이 입장
-                        } else {
+                        if (!uid.equals(masterUid)) {
                             // 마스터 아닐때
                             if (chatMemberCount < personnel) {
                                 // 참가인원이 정원보다 적을때 유저 채팅방 참가 및 DB 추가
                                 Map<String, Object> userMap = new HashMap<>();
                                 userMap.put(uid, true);
                                 rootReference.child("members").child(databaseChatKey).updateChildren(userMap);
+
+                                // 유저 입장 방송메세지 안내하기
+
                             } else {
                                 finish();
                                 Toast.makeText(ChatActivity.this, "채팅방 인원이 초과되었습니다", Toast.LENGTH_SHORT).show();
                             }
+                        } else {
+                            // 마스터는 인원 상관없이 입장
                         }
                     }
 
@@ -238,34 +242,6 @@ public class ChatActivity extends AppCompatActivity {
         });
     }
 
-    // 현재 로그인한 계정의 프로필을 리스트에 저장하여 반환한다
-    // ex) [로그인제공업체, uid, name, email]
-    private ArrayList<String> getCurrentUserProfile() {
-        ArrayList<String> userProfile = new ArrayList<>();
-        // 현재 로그인한 사용자 프로필 가져오기
-        FirebaseUser user = firebaseAuth.getCurrentUser();
-        if (user != null) {
-            // 로그인방식의 경우가 여러가지이기 때문에 (일반 이메일, 구글계정)
-            // 반복문을 통해 현재 계정과 연결된 로그인제공 업체를 찾고 프로필을 가져온다
-            for (UserInfo profile : user.getProviderData()) {
-                // 로그인 계정 제공업체 (ex: google.com)
-                String providerId = profile.getProviderId();
-                // UID 각 계정마다 부여되는 고유 값
-                String uid = profile.getUid();
-                String name = profile.getDisplayName();
-                String email = profile.getEmail();
-                //Uri photoUrl = profile.getPhotoUrl();
-                userProfile.add(providerId);
-                userProfile.add(uid);
-                userProfile.add(name);
-                userProfile.add(email);
-            }
-        } else {
-            // 로그인 하지 않았음
-        }
-        return userProfile;
-    }
-
     @Override
     protected void onPause() {
         super.onPause();
@@ -300,9 +276,39 @@ public class ChatActivity extends AppCompatActivity {
 
             }
         });
-
-
-
-
     }
+
+
+    // 현재 로그인한 계정의 프로필을 리스트에 저장하여 반환한다
+    // ex) [로그인제공업체, uid, name, email]
+    private ArrayList<String> getCurrentUserProfile() {
+        ArrayList<String> userProfile = new ArrayList<>();
+        // 현재 로그인한 사용자 프로필 가져오기
+        FirebaseUser user = firebaseAuth.getCurrentUser();
+        if (user != null) {
+            // 로그인방식의 경우가 여러가지이기 때문에 (일반 이메일, 구글계정)
+            // 반복문을 통해 현재 계정과 연결된 로그인제공 업체를 찾고 프로필을 가져온다
+            for (UserInfo profile : user.getProviderData()) {
+                // 로그인 계정 제공업체 (ex: google.com)
+                String providerId = profile.getProviderId();
+                // UID 각 계정마다 부여되는 고유 값
+                String uid = profile.getUid();
+                String name = profile.getDisplayName();
+                String email = profile.getEmail();
+                //Uri photoUrl = profile.getPhotoUrl();
+                userProfile.add(providerId);
+                userProfile.add(uid);
+                userProfile.add(name);
+                userProfile.add(email);
+            }
+        } else {
+            // 로그인 하지 않았음
+        }
+        return userProfile;
+    }
+
+
+    // 유저 채팅방 입장 시 채팅방에 유저 참가메세지 추가
+    // ex) 재혁님이 입장하였습니다
+
 }

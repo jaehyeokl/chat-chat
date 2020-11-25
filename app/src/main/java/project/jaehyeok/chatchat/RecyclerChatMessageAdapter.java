@@ -33,6 +33,7 @@ public class RecyclerChatMessageAdapter extends RecyclerView.Adapter<RecyclerCha
         private TextView chatUserName;
         private TextView chatMessageOther;
         private TextView chatMessageUser;
+        private TextView chatMessageBroadcast;
 
         private FirebaseDatabase firebaseDatabase; // 데이터베이스 진입
         private DatabaseReference usersReference;
@@ -42,6 +43,7 @@ public class RecyclerChatMessageAdapter extends RecyclerView.Adapter<RecyclerCha
             chatUserName = itemView.findViewById(R.id.chatUserName);
             chatMessageOther = itemView.findViewById(R.id.chatMessageOther);
             chatMessageUser = itemView.findViewById(R.id.chatMessageUser);
+            chatMessageBroadcast = itemView.findViewById(R.id.chatMessageBroadcast);
             // 파이어베이스 realtime database 접근 설정
             firebaseDatabase = FirebaseDatabase.getInstance();
             usersReference = firebaseDatabase.getReference("users");
@@ -100,11 +102,13 @@ public class RecyclerChatMessageAdapter extends RecyclerView.Adapter<RecyclerCha
             holder.chatUserName.setVisibility(View.GONE);
             holder.chatMessageOther.setVisibility(View.GONE);
             holder.chatMessageUser.setVisibility(View.GONE);
+            holder.chatMessageBroadcast.setVisibility(View.VISIBLE);
+            holder.chatMessageBroadcast.setText(message.getMessage());
         }
 
         // 현재 메세지의 작성자를 전역변수인 checkPreviousUid 으로 저장해 놓는다
         // 이 변수는 다음메세지에서 작성자가 연속되는 메세지의 작성자의 동일여부를 판단하는데 사용한다.
-        checkPreviousUid = getUid;
+//        checkPreviousUid = getUid;
 
 
 
@@ -137,4 +141,11 @@ public class RecyclerChatMessageAdapter extends RecyclerView.Adapter<RecyclerCha
         return chatMessageList.size();
     }
 
+    // 채팅내용 리사이클러뷰 스크롤 하다보면 아이템 내용이 무작위로 바뀌는 문제가 생겼음
+    // getItemViewType 메소드의 return 값으로 position 을 지정하여 해결한다
+    // https://stackoverflow.com/questions/32065267/recyclerview-changing-items-during-scroll
+    @Override
+    public int getItemViewType(int position) {
+        return position;
+    }
 }
