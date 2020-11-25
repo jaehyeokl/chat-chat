@@ -125,7 +125,7 @@ public class ChatActivity extends AppCompatActivity {
                                 rootReference.child("members").child(databaseChatKey).updateChildren(userMap);
 
                                 // 유저 입장 방송메세지 안내하기
-
+                                addBroadcastMessageUserAttend(true);
                             } else {
                                 finish();
                                 Toast.makeText(ChatActivity.this, "채팅방 인원이 초과되었습니다", Toast.LENGTH_SHORT).show();
@@ -268,6 +268,9 @@ public class ChatActivity extends AppCompatActivity {
                             rootReference.child("members").child(databaseChatKey).child(uid).setValue(null);
                         }
                     }
+
+                    // 유저 퇴장메세지 추가하기
+                    addBroadcastMessageUserAttend(false);
                 }
             }
 
@@ -308,7 +311,41 @@ public class ChatActivity extends AppCompatActivity {
     }
 
 
-    // 유저 채팅방 입장 시 채팅방에 유저 참가메세지 추가
-    // ex) 재혁님이 입장하였습니다
+    // 유저 채팅방 참가/퇴장 시 채팅방 참가/퇴장을 알리는 메세지 추가
+    // 인자가 true 일때 참가메세지, false 일때 퇴장메세지이다
+    // ex) 재혁님이 입장하였습니다, 재혁님이 퇴장하였습니다
+    private void addBroadcastMessageUserAttend(final boolean state) {
+        // uid 를 통하여 참가여부 메세지에 보여줄 유저 이름을 구한다
+        rootReference.child("users").child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                UserData userData = snapshot.getValue(UserData.class);
+                String showUserName = userData.getName();
+                // 유저 닉네임이 설정되어 있지 않을때
+                // 채팅방에서 메세지작성자로 이메일을 표시한다
+                if (showUserName == null) {
+                    showUserName = userData.getEmail();
+                }
 
+                // 참가/ 퇴장 문장 만들기
+                String stateMessage = "";
+                if (state) {
+                    stateMessage = " 들어왔습니다!";
+                } else {
+                    stateMessage = " 나갔습니다.";
+                }
+                String userActionMessage =  "'" + showUserName + "' 님이" + stateMessage;
+
+                // 유저 이름을 포함한 메세지 작성 후 메세지 데이터베이스에 저장한다
+                DatabaseReference messagesReference = rootReference.child("messages");
+                Message userActionBroadcast = new Message(true, userActionMessage);
+                messagesReference.child(databaseChatKey).push().setValue(userActionBroadcast);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
 }
