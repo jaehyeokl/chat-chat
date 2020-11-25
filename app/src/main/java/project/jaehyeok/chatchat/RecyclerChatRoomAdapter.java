@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,6 +43,8 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
         TextView chatViewTitle;
         TextView chatViewCurrentCount;
         TextView chatViewPersonnel;
+        TextView chatThumbCount;
+        Button chatThumbButton;
         Intent toChatActivityIntent;
 
         public ViewHolder(@NonNull final View itemView) {
@@ -49,6 +52,8 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
             chatViewTitle = itemView.findViewById(R.id.chatViewTitle);
             chatViewCurrentCount = itemView.findViewById(R.id.chatViewCurrentCount);
             chatViewPersonnel = itemView.findViewById(R.id.chatViewPersonnel);
+            chatThumbCount = itemView.findViewById(R.id.chatThumbCount);
+            chatThumbButton = itemView.findViewById(R.id.chatThumbButton);
 
             // 클릭이벤트 밖에서 인텐트를 초기화하는 이유
             // ChatActivity 에 전달할 데이터를 추가하기 위해서 onBindViewHolder 메소드에서
@@ -69,6 +74,18 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
                     }
                 }
             });
+
+            chatThumbButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    // 리사이클러뷰 목록에서 아이템의 포지션
+                    int position = getAdapterPosition();
+                    if (position != RecyclerView.NO_POSITION) {
+                        // 채팅에 좋아요 표시할 수 있도록 한다
+                        Toast.makeText(view.getContext(), position + "", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
         }
     }
 
@@ -82,8 +99,13 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
 
         View view = inflater.inflate(R.layout.chat_room_list_item, parent,false);
         RecyclerChatRoomAdapter.ViewHolder viewHolder = new RecyclerChatRoomAdapter.ViewHolder(view);
-
         return viewHolder;
+
+//        View rootView = inflater.inflate(R.layout.chat_room_list_item, null, false);
+//        RecyclerView.LayoutParams aa = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+//        rootView.setLayoutParams(aa);
+//        return new ViewHolder(rootView);
+
     }
 
     // 만들어진 아이템에 보여줄 데이터를 반영한다

@@ -3,14 +3,17 @@ package project.jaehyeok.chatchat;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,6 +38,7 @@ public class ChatActivity extends AppCompatActivity {
     private TextView chatRoomTitle;
     private TextView chatRoomCurrentCount;
     private TextView chatRoomPersonnel;
+    private ImageView chatRoomThumbButton;
     private EditText inputChatMessage;
     private Button sendMessageButton;
 
@@ -50,6 +54,8 @@ public class ChatActivity extends AppCompatActivity {
 
     private ArrayList<Message> chatMessages;
 
+    private boolean userThumbChatState;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,6 +65,7 @@ public class ChatActivity extends AppCompatActivity {
         chatRoomTitle = findViewById(R.id.chatRoomTitle);
         chatRoomCurrentCount = findViewById(R.id.chatRoomCurrentCount);
         chatRoomPersonnel = findViewById(R.id.chatRoomPersonnel);
+        chatRoomThumbButton = findViewById(R.id.chatRoomThumbButton);
         inputChatMessage = findViewById(R.id.inputChatMessage);
         sendMessageButton = findViewById(R.id.sendMessageButton);
 
@@ -189,6 +196,26 @@ public class ChatActivity extends AppCompatActivity {
 
             }
         });
+
+        // 채팅방 안에서 유저가 좋아요를 누른 채팅방일때는 상단의 하트버튼이 꽉차도록 보이게 한다
+        rootReference.child("thumb").child(databaseChatKey).child(uid).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.getValue() != null && (boolean) snapshot.getValue()) {
+                    // 채팅방의 좋아요를 저장하는 데이터베이스에 <uid : true> 형태로 저장되어 있을때
+                    chatRoomThumbButton.setBackgroundResource(R.drawable.ic_heart_pull_red);
+                    userThumbChatState = true;
+                } else {
+                    chatRoomThumbButton.setBackgroundResource(R.drawable.ic_heart_blank);
+                    userThumbChatState = false;
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
     }
 
     @Override
@@ -238,6 +265,29 @@ public class ChatActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 onBackPressed();
+            }
+        });
+
+        // 좋아요 버튼 눌렀을때
+        chatRoomThumbButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                Map<String, Object> userThumb = new HashMap<>();
+                if (userThumbChatState) {
+                    // 좋아요 한 채팅방일때
+                    // 좋아요를 저장하는 데이터베이스에 <uid : null> 형태로 데이터를 삭제한다
+                    userThumb.put(uid, null);
+                    rootReference.child("thumb").child(databaseChatKey).updateChildren(userThumb);
+                    userThumbChatState = false;
+                } else {
+                    // 아직 좋아요 상태가 아닐때
+                    // 좋아요를 저장하는 데이터베이스에 <uid : true> 형태로 데이터를 저장한다
+                    userThumb.put(uid, true);
+                    rootReference.child("thumb").child(databaseChatKey).updateChildren(userThumb);
+                    userThumbChatState = true;
+                }
+
             }
         });
     }

@@ -49,6 +49,7 @@ dependencies {
     implementation "com.airbnb.android:lottie:3.4.0"
     // 파이어베이스 데이터베이스
     implementation 'com.google.firebase:firebase-database'
-    //noinspection GradleCompatible
-    implementation "com.android.support:design:27.0.0"
+    // 카드뷰 사용 위한 위젯 추가
+//    implementation 'com.androidx.support:cardview-v7:26.1.0'
+//    implementation 'com.androidx.support:recyclerview-v7:26.1.0'
 }
