@@ -5,6 +5,7 @@ public class Chat {
     public long timestamp = System.currentTimeMillis();
     public String title;
     public int personnel;
+    public int thumb;
 
     public Chat() {
         // Default constructor required for calls to DataSnapshot.getValue
@@ -46,5 +47,13 @@ public class Chat {
 
     public void setPersonnel(int personnel) {
         this.personnel = personnel;
+    }
+
+    public int getThumb() {
+        return thumb;
+    }
+
+    public void setThumb(int thumb) {
+        this.thumb = thumb;
     }
 }

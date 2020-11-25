@@ -127,12 +127,29 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
 
             }
         });
+        // 좋아요 여부를 저장하는 thumb 에 접근하여 현재 유저가 해당 채팅방을 좋아요 했는지 확인한다
+//        rootReference.child("thumb").child(databaseKey).child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot snapshot) {
+//                if (snapshot.getValue() != null && (boolean) snapshot.getValue()) {
+//                    // 좋아요 확인됐을때 꽉찬 하트로 변경
+//                    holder.chatThumbButton.setBackgroundResource(R.drawable.ic_heart_pull_red);
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError error) {
+//
+//            }
+//        });
 
         Chat chat = chatDataSnapShot.getValue(Chat.class);
         String title = chat.getTitle();
         int personnel = chat.getPersonnel();
+        int thumb = chat.getThumb();
         holder.chatViewTitle.setText(title);
         holder.chatViewPersonnel.setText((personnel + ""));
+        holder.chatThumbCount.setText(thumb + "");
 
         // ChatActivity 에서 파이어베이스 데이터베이스에 저장된 메세지, 참가인원 데이터를 불러오기 위해서는
         // 접근하기 위한 key 값이 필요하다. 이를 위해 chatDataSnapShot 에 저장된 key 값을 Intent 를 통해 전달한다

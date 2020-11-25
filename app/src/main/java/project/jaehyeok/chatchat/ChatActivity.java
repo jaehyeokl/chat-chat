@@ -280,12 +280,14 @@ public class ChatActivity extends AppCompatActivity {
                     userThumb.put(uid, null);
                     rootReference.child("thumb").child(databaseChatKey).updateChildren(userThumb);
                     userThumbChatState = false;
+                    refreshThumbCount();
                 } else {
                     // 아직 좋아요 상태가 아닐때
                     // 좋아요를 저장하는 데이터베이스에 <uid : true> 형태로 데이터를 저장한다
                     userThumb.put(uid, true);
                     rootReference.child("thumb").child(databaseChatKey).updateChildren(userThumb);
                     userThumbChatState = true;
+                    refreshThumbCount();
                 }
 
             }
@@ -398,4 +400,25 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
     }
+
+    // 데이터베이스에서 채팅이 좋아요 받은 개수(thumb 의 데이터 개수)를 채팅데이터 chats 에 저장한다
+    // 기존에 chats 데이터에서 아이템에 보여줄 데이터를 참조하는 리사이클러뷰에서 좋아요 받은 개수를 보여주기 위해
+    // 아이템마다 thumb 데이터에 접근할 때 아이템에 표시되는 속도가 느려지기 때문에
+    private void refreshThumbCount() {
+        rootReference.child("thumb").child(databaseChatKey).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                int getThumbCount = (int) snapshot.getChildrenCount();
+                Map<String, Object> chatThumbMap = new HashMap<>();
+                chatThumbMap.put("thumb", getThumbCount);
+                rootReference.child("chats").child(databaseChatKey).updateChildren(chatThumbMap);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+
 }
