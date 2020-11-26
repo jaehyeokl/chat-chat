@@ -5,6 +5,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Patterns;
@@ -26,6 +27,9 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.auth.UserInfo;
+
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -117,6 +121,9 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
+                            // uid 를 로컬 데이터에 저장하기
+                            localSaveUserUid();
+
                             Intent intent = new Intent(getApplicationContext(), ChatListActivity.class);
                             // 로그인 이후 백버튼을 통해 다시 로그인페이지로 돌아올 수 없도록 한다
                             // task 의 액티비티를 모두 제거하고, 새로운 task 를 만든다
@@ -167,6 +174,8 @@ public class MainActivity extends AppCompatActivity {
                             // 구글 로그인 최종 성공, 로그인 이후 이동할 페이지 안내
                             Log.d("구글 로그인", "signInWithCredential:success");
                             FirebaseUser user = firebaseAuth.getCurrentUser();
+                            // uid 를 로컬 데이터에 저장하기
+                            localSaveUserUid();
                             updateUI(user);
                         } else {
                             // If sign in fails, display a message to the user.
@@ -185,5 +194,49 @@ public class MainActivity extends AppCompatActivity {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
         }
+    }
+
+    // 로그인을 했을때 디바이스에(SharedPreferences) uid 를 저장한다
+    // 해당 uid 는 다른 액티비티 또는 클래스에서 현재 로그인한 유저 정보를 식별하기 위해 사용한다
+    private void localSaveUserUid() {
+        // 저장할 uid 를 가져온다
+        ArrayList<String> userProfile = getCurrentUserProfile();
+        String uid = userProfile.get(1);
+
+        SharedPreferences sharedPreferences = getSharedPreferences("firebaseAuth", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("uid", uid);
+        editor.commit();
+
+        //스틱코드에 접속하여 생산성을 향상시켜 보세요, https://stickode.com/
+        System.out.println("@@@@@@@@@@@@@@@@@@@@@@ : " + uid);
+    }
+
+    // 현재 로그인한 계정의 프로필을 리스트에 저장하여 반환한다
+    // ex) [로그인제공업체, uid, name, email]
+    private ArrayList<String> getCurrentUserProfile() {
+        ArrayList<String> userProfile = new ArrayList<>();
+        // 현재 로그인한 사용자 프로필 가져오기
+        FirebaseUser user = firebaseAuth.getCurrentUser();
+        if (user != null) {
+            // 로그인방식의 경우가 여러가지이기 때문에 (일반 이메일, 구글계정)
+            // 반복문을 통해 현재 계정과 연결된 로그인제공 업체를 찾고 프로필을 가져온다
+            for (UserInfo profile : user.getProviderData()) {
+                // 로그인 계정 제공업체 (ex: google.com)
+                String providerId = profile.getProviderId();
+                // UID 각 계정마다 부여되는 고유 값
+                String uid = profile.getUid();
+                String name = profile.getDisplayName();
+                String email = profile.getEmail();
+                //Uri photoUrl = profile.getPhotoUrl();
+                userProfile.add(providerId);
+                userProfile.add(uid);
+                userProfile.add(name);
+                userProfile.add(email);
+            }
+        } else {
+            // 로그인 하지 않았음
+        }
+        return userProfile;
     }
 }
