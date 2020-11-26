@@ -222,8 +222,8 @@ public class ChatListActivity extends AppCompatActivity {
                     // 검색입력창에 검색어 입력됐을때 해당내용으로 검색하기
                     if (inputSearchChat.getText() != null) {
                         CharSequence searchWord = inputSearchChat.getText();
+                        chatThumbAdapter.getFilter().filter(searchWord);
                         chatLatestAdapter.getFilter().filter(searchWord);
-                        Toast.makeText(ChatListActivity.this, searchWord.toString(), Toast.LENGTH_SHORT).show();
                     }
                 }
             }
