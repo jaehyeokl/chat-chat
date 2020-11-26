@@ -18,10 +18,12 @@ import java.util.ArrayList;
 // ChatListActivity 에서 채팅방 카테고리에 대한 리사이클러뷰 어댑터 (가로)
 public class RecyclerChatCategoryAdapter extends RecyclerView.Adapter<RecyclerChatCategoryAdapter.ViewHolder> {
     ArrayList<DataSnapshot> chatDataSnapShotList = null;
+    String uid;
 
     // 생성자를 통해 목록에 나타낼 데이터를 전달 받는다
-    public RecyclerChatCategoryAdapter(ArrayList<DataSnapshot> chatDataSnapShotList) {
+    public RecyclerChatCategoryAdapter(ArrayList<DataSnapshot> chatDataSnapShotList, String uid) {
         this.chatDataSnapShotList = chatDataSnapShotList;
+        this.uid = uid;
     }
 
     // 아이템 뷰를 저장하는 뷰홀더 클래스
@@ -63,7 +65,7 @@ public class RecyclerChatCategoryAdapter extends RecyclerView.Adapter<RecyclerCh
     @Override
     public void onBindViewHolder(@NonNull RecyclerChatCategoryAdapter.ViewHolder holder, int position) {
 //        holder.textView.setText("안녕하세요" + position);
-        holder.chatRoomAdapter = new RecyclerChatRoomAdapter(chatDataSnapShotList, position);
+        holder.chatRoomAdapter = new RecyclerChatRoomAdapter(chatDataSnapShotList, position, uid);
         holder.chatRoomRecyclerview.setAdapter(holder.chatRoomAdapter);
         holder.chatRoomRecyclerview.setLayoutManager(new LinearLayoutManager(holder.itemView.getContext()));
     }

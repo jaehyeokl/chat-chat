@@ -41,6 +41,7 @@ public class ChatListActivity extends AppCompatActivity {
     private RecyclerChatCategoryAdapter chatCategoryAdapter;
 
     private ArrayList<DataSnapshot> chatDataSnapShotList;
+    private String uid;
 
     private static final int CREATE_CHAT = 7000;
 
@@ -63,6 +64,7 @@ public class ChatListActivity extends AppCompatActivity {
         // 현재 로그인한 사용자 프로필 가져오기
         // ex) [로그인제공업체, uid, name, email]
         ArrayList<String> userProfile = getCurrentUserProfile();
+        uid = userProfile.get(1);
 
         // 파이어베이스 DB 에서 uid 를 통해 계정 데이터의 저장여부를 확인 / 최초 로그인 여부를 판별한다
         // 최초 로그인일때 파이어베이스 DB 의 경로 users 에 새로운 유저 데이터를 생성한다
@@ -92,7 +94,7 @@ public class ChatListActivity extends AppCompatActivity {
                 // 카테고리별 채팅 목록
                 // 채팅목록에 대하여 인기순, 검색결과, 최신순으로 가로스크롤 형태로 지원한다
                 chatCategoryRecyclerview = findViewById(R.id.chatCategoryRecyclerview);
-                chatCategoryAdapter = new RecyclerChatCategoryAdapter(chatDataSnapShotList);
+                chatCategoryAdapter = new RecyclerChatCategoryAdapter(chatDataSnapShotList, uid);
                 chatCategoryRecyclerview.setAdapter(chatCategoryAdapter);
                 LinearLayoutManager chatCategoryLayoutManager = new LinearLayoutManager(ChatListActivity.this, LinearLayoutManager.HORIZONTAL, false);
                 chatCategoryRecyclerview.setLayoutManager(chatCategoryLayoutManager);

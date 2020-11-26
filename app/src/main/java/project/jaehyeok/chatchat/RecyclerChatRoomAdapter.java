@@ -2,6 +2,7 @@ package project.jaehyeok.chatchat;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,14 +26,16 @@ import java.util.Collections;
 public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRoomAdapter.ViewHolder> {
     private ArrayList<DataSnapshot> chatDataSnapShotList = null;
     private int categoryPosition;
+    private String uid;
     // 데이터베이스 접근
     private FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
     private DatabaseReference rootReference = firebaseDatabase.getReference();
 
     // 생성자를 통해 목록에 나타낼 데이터를 전달 받는다
-    public RecyclerChatRoomAdapter(ArrayList<DataSnapshot> chatDataSnapShotList, int categoryPosition) {
+    public RecyclerChatRoomAdapter(ArrayList<DataSnapshot> chatDataSnapShotList, int categoryPosition, String uid) {
         this.chatDataSnapShotList = chatDataSnapShotList;
         this.categoryPosition = categoryPosition;
+        this.uid = uid;
 
         // 카테고리에 따라 데이터를 정렬하는 메소드
         dataOrderByCategory();
@@ -128,20 +131,20 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
             }
         });
         // 좋아요 여부를 저장하는 thumb 에 접근하여 현재 유저가 해당 채팅방을 좋아요 했는지 확인한다
-//        rootReference.child("thumb").child(databaseKey).child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot snapshot) {
-//                if (snapshot.getValue() != null && (boolean) snapshot.getValue()) {
-//                    // 좋아요 확인됐을때 꽉찬 하트로 변경
-//                    holder.chatThumbButton.setBackgroundResource(R.drawable.ic_heart_pull_red);
-//                }
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError error) {
-//
-//            }
-//        });
+        rootReference.child("thumb").child(databaseKey).child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.getValue() != null && (boolean) snapshot.getValue()) {
+                    // 좋아요 확인됐을때 꽉찬 하트로 변경
+                    holder.chatThumbButton.setBackgroundResource(R.drawable.ic_heart_pull_red);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
 
         Chat chat = chatDataSnapShot.getValue(Chat.class);
         String title = chat.getTitle();
