@@ -26,9 +26,12 @@ import java.util.Collections;
 
 // ChatListActivity 에서 채팅방 목록에 대한 리사이클러뷰 어댑터 (세로)
 public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRoomAdapter.ViewHolder> implements Filterable {
-    private ArrayList<DataSnapshot> chatDataSnapShotList = null;
+    private ArrayList<DataSnapshot> chatDataSnapShotList = null; // unfiltered
     private int categoryPosition;
     private String uid;
+
+    private ArrayList<DataSnapshot> filteredList;
+
     // 데이터베이스 접근
     private FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
     private DatabaseReference rootReference = firebaseDatabase.getReference();
@@ -36,6 +39,7 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
     // 생성자를 통해 목록에 나타낼 데이터를 전달 받는다
     public RecyclerChatRoomAdapter(ArrayList<DataSnapshot> chatDataSnapShotList, String uid) {
         this.chatDataSnapShotList = chatDataSnapShotList;
+        this.filteredList = chatDataSnapShotList;
 //        this.categoryPosition = categoryPosition;
         this.uid = uid;
 
@@ -45,7 +49,38 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
 
     @Override
     public Filter getFilter() {
-        return null;
+        return new Filter() {
+            @Override
+            protected FilterResults performFiltering(CharSequence charSequence) {
+                String charString = charSequence.toString();
+                if(charString.isEmpty()) {
+                    filteredList = chatDataSnapShotList;
+                } else {
+                    System.out.println(charString + ": //////////////////////////////");
+                    ArrayList<DataSnapshot> filteringList = new ArrayList<>();
+                    for(DataSnapshot dataSnapshot: chatDataSnapShotList) {
+                        Chat chatData = dataSnapshot.getValue(Chat.class);
+                        String chatTitle = chatData.getTitle();
+                        System.out.println(chatTitle);
+
+                        if(chatTitle.toLowerCase().contains(charString)) {
+                            filteringList.add(dataSnapshot);
+                        }
+                    }
+                    filteredList = filteringList;
+                }
+
+                FilterResults filterResults = new FilterResults();
+                filterResults.values = filteredList;
+                return filterResults;
+            }
+
+            @Override
+            protected void publishResults(CharSequence charSequence, FilterResults filterResults) {
+                filteredList = (ArrayList<DataSnapshot>) filterResults.values;
+                notifyDataSetChanged();
+            }
+        };
     }
 
     // 아이템 뷰를 저장하는 뷰홀더 클래스
@@ -126,7 +161,7 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
     // 만들어진 아이템에 보여줄 데이터를 반영한다
     @Override
     public void onBindViewHolder(@NonNull final RecyclerChatRoomAdapter.ViewHolder holder, int position) {
-        DataSnapshot chatDataSnapShot = chatDataSnapShotList.get(position);
+        DataSnapshot chatDataSnapShot = filteredList.get(position);
         // 데이터베이스 chats 의 key 값과 같은 key 값을 공유하는 다른 데이터베이스에 접근하기위해서
         String databaseKey = chatDataSnapShot.getKey();
 
@@ -189,7 +224,7 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
     // 전체 데이터(아이템) 개수를 리턴
     @Override
     public int getItemCount() {
-        return chatDataSnapShotList.size();
+        return filteredList.size();
     }
 
     // 데이터 정렬하기

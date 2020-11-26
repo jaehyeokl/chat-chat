@@ -3,17 +3,25 @@ package project.jaehyeok.chatchat;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -34,7 +42,10 @@ import java.util.List;
 
 public class ChatListActivity extends AppCompatActivity {
 
+    private EditText inputSearchChat;
+    private Button searchChatButton;
     private FloatingActionButton addChatButton;
+    private ConstraintLayout parentLayout;
 
     private FirebaseAuth firebaseAuth = null;
     private FirebaseDatabase firebaseDatabase; // 데이터베이스 진입
@@ -58,7 +69,10 @@ public class ChatListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat_list);
 
+        inputSearchChat = findViewById(R.id.inputSearchChat);
+        searchChatButton = findViewById(R.id.searchChatButton);
         addChatButton = findViewById(R.id.addChatButton);
+        parentLayout = findViewById(R.id.activityChatListLayout);
 
         // 파이어베이스 접근 권한 갖기
         firebaseAuth = FirebaseAuth.getInstance();
@@ -146,6 +160,46 @@ public class ChatListActivity extends AppCompatActivity {
                 startActivityForResult(intent, CREATE_CHAT);
             }
         });
+
+        // 검색버튼 누르면 보이지 않던 검색어 입력창이 나타난다
+        // 검색어 입력창이 나타난 상태에서 한번 더 누르면 해당 검색어로 검색 실행한다
+        searchChatButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (inputSearchChat.getVisibility() == View.INVISIBLE) {
+                    // 검색버튼 누르면 검색입력창 보이게 하고, 바로 입력할 수 있도록 포커스를 준다
+                    inputSearchChat.setVisibility(View.VISIBLE);
+                    inputSearchChat.requestFocus();
+                } else {
+                    // 검색입력창에 검색어 입력됐을때 해당내용으로 검색하기
+                    if (inputSearchChat.getText() != null) {
+                        CharSequence searchWord = inputSearchChat.getText();
+                        chatListAdapter.getFilter().filter(searchWord);
+                        Toast.makeText(ChatListActivity.this, searchWord.toString(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        });
+
+//        // 검색버튼 누르면 보이지 않던 검색어 입력창이 나타난다
+//        inputSearchChat.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+//            @Override
+//            public void onFocusChange(View view, boolean stateFocus) {
+//                if (!stateFocus) {
+//                    inputSearchChat.setVisibility(View.INVISIBLE);
+//                }
+//            }
+//        });
+
+        // 검색어 입력창 외부 터치 했을때 키보드 사라지고 검색입력창도 보이지않도록 설정한다
+        parentLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(inputSearchChat.getWindowToken(), 0);
+                inputSearchChat.setVisibility(View.INVISIBLE);
+            }
+        });
     }
 
     @Override
@@ -218,4 +272,6 @@ public class ChatListActivity extends AppCompatActivity {
             }
         });
     }
+
+
 }
