@@ -170,6 +170,9 @@ public class ChatListActivity extends AppCompatActivity {
                     // 검색버튼 누르면 검색입력창 보이게 하고, 바로 입력할 수 있도록 포커스를 준다
                     inputSearchChat.setVisibility(View.VISIBLE);
                     inputSearchChat.requestFocus();
+                    // 키보드 올리기
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.showSoftInput(inputSearchChat, InputMethodManager.SHOW_IMPLICIT);
                 } else {
                     // 검색입력창에 검색어 입력됐을때 해당내용으로 검색하기
                     if (inputSearchChat.getText() != null) {
@@ -180,16 +183,6 @@ public class ChatListActivity extends AppCompatActivity {
                 }
             }
         });
-
-//        // 검색버튼 누르면 보이지 않던 검색어 입력창이 나타난다
-//        inputSearchChat.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-//            @Override
-//            public void onFocusChange(View view, boolean stateFocus) {
-//                if (!stateFocus) {
-//                    inputSearchChat.setVisibility(View.INVISIBLE);
-//                }
-//            }
-//        });
 
         // 검색어 입력창 외부 터치 했을때 키보드 사라지고 검색입력창도 보이지않도록 설정한다
         parentLayout.setOnClickListener(new View.OnClickListener() {
