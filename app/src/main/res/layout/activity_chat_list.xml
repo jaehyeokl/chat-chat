@@ -43,13 +43,13 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button2" />
+        app:layout_constraintTop_toBottomOf="@+id/viewListOrderByThumb" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/addChatButton"
         android:layout_width="60dp"
         android:layout_height="60dp"
-        android:layout_marginEnd="10dp"
+        android:layout_marginEnd="30dp"
         android:layout_marginBottom="60dp"
         android:backgroundTint="#55B6AD"
         android:elevation="20dp"
@@ -71,29 +71,29 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/button2"
+        android:id="@+id/viewListOrderByThumb"
         android:layout_width="0dp"
         android:layout_height="30dp"
         android:layout_marginTop="20dp"
         android:gravity="center_horizontal|center_vertical"
         android:text="인기순"
-        app:layout_constraintEnd_toStartOf="@+id/button3"
+        app:layout_constraintEnd_toStartOf="@+id/viewListOrderByLatest"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView3"
         app:layout_constraintWidth_percent="0.5" />
 
     <TextView
-        android:id="@+id/button3"
+        android:id="@+id/viewListOrderByLatest"
         android:layout_width="0dp"
         android:layout_height="30dp"
         android:gravity="center|center_vertical"
         android:text="최신순"
-        app:layout_constraintBottom_toBottomOf="@+id/button2"
+        app:layout_constraintBottom_toBottomOf="@+id/viewListOrderByThumb"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/button2"
-        app:layout_constraintTop_toTopOf="@+id/button2"
+        app:layout_constraintStart_toEndOf="@+id/viewListOrderByThumb"
+        app:layout_constraintTop_toTopOf="@+id/viewListOrderByThumb"
         app:layout_constraintWidth_percent="0.5" />
 
     <Button

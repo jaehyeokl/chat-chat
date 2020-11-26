@@ -40,11 +40,7 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
     public RecyclerChatRoomAdapter(ArrayList<DataSnapshot> chatDataSnapShotList, String uid) {
         this.chatDataSnapShotList = chatDataSnapShotList;
         this.filteredList = chatDataSnapShotList;
-//        this.categoryPosition = categoryPosition;
         this.uid = uid;
-
-        // 카테고리에 따라 데이터를 정렬하는 메소드
-//        dataOrderByCategory();
     }
 
     @Override
@@ -119,23 +115,6 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
                     }
                 }
             });
-
-//            chatThumbButton.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View view) {
-//                    // 리사이클러뷰 목록에서 아이템의 포지션
-//                    int position = getAdapterPosition();
-//                    if (position != RecyclerView.NO_POSITION) {
-//                        // 채팅에 좋아요 표시할 수 있도록 한다
-////                        chatThumbButton.setBackgroundResource(R.drawable.ic_heart_pull_red);
-//                        chatThumbButton.getBackground();
-//
-//                        //스틱코드에 접속하여 생산성을 향상시켜 보세요, https://stickode.com/
-//                        System.out.println(chatThumbButton.getBackground().toString());
-//                        Toast.makeText(view.getContext(), chatThumbButton.getBackground() + "", Toast.LENGTH_SHORT).show();
-//                    }
-//                }
-//            });
         }
     }
 
@@ -203,18 +182,6 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
         holder.chatViewTitle.setText(title);
         holder.chatViewPersonnel.setText((personnel + ""));
         holder.chatThumbCount.setText(thumb + "");
-
-//        // 아이템의 좋아요 눌렀을때 반영하기
-//        holder.chatThumbButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                if (holder.chatThumbButton.getBackground().toString().equals("android.graphics.drawable.BitmapDrawable@814e51c")) {
-//                    System.out.println("좋아요!");
-//                } else {
-//                    System.out.println("좋아요 해제!");
-//                }
-//            }
-//        });
 
         // ChatActivity 에서 파이어베이스 데이터베이스에 저장된 메세지, 참가인원 데이터를 불러오기 위해서는
         // 접근하기 위한 key 값이 필요하다. 이를 위해 chatDataSnapShot 에 저장된 key 값을 Intent 를 통해 전달한다

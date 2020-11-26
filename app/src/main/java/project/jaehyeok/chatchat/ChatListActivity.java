@@ -10,8 +10,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.Layout;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -21,6 +23,7 @@ import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -44,8 +47,11 @@ public class ChatListActivity extends AppCompatActivity {
 
     private EditText inputSearchChat;
     private Button searchChatButton;
+    private TextView viewListOrderByLatest, viewListOrderByThumb;
     private FloatingActionButton addChatButton;
     private ConstraintLayout parentLayout;
+
+    private Boolean viewStateThumb = true;
 
     private FirebaseAuth firebaseAuth = null;
     private FirebaseDatabase firebaseDatabase; // 데이터베이스 진입
@@ -71,8 +77,13 @@ public class ChatListActivity extends AppCompatActivity {
 
         inputSearchChat = findViewById(R.id.inputSearchChat);
         searchChatButton = findViewById(R.id.searchChatButton);
+        viewListOrderByLatest = findViewById(R.id.viewListOrderByLatest);
+        viewListOrderByThumb = findViewById(R.id.viewListOrderByThumb);
         addChatButton = findViewById(R.id.addChatButton);
         parentLayout = findViewById(R.id.activityChatListLayout);
+
+        // 첫 실행 시 인기순 정렬
+        changeButtonByOrder(viewStateThumb);
 
         // 파이어베이스 접근 권한 갖기
         firebaseAuth = FirebaseAuth.getInstance();
@@ -132,7 +143,6 @@ public class ChatListActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
         // 채팅목록을 아래로 스크롤할때 채팅추가버튼 사라지게하고, 올릴때는 다시 보이도록 한다
         chatListRecyclerview.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -191,6 +201,24 @@ public class ChatListActivity extends AppCompatActivity {
                 InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(inputSearchChat.getWindowToken(), 0);
                 inputSearchChat.setVisibility(View.INVISIBLE);
+            }
+        });
+
+        // 인기순 보기
+        viewListOrderByThumb.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                changeButtonByOrder(true);
+                viewStateThumb = true;
+            }
+        });
+
+        // 최신순 보기
+        viewListOrderByLatest.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                changeButtonByOrder(false);
+                viewStateThumb = false;
             }
         });
     }
@@ -264,6 +292,21 @@ public class ChatListActivity extends AppCompatActivity {
                 //
             }
         });
+    }
+
+    // 채팅 리스트 인기순, 최신순 보기 선택 시 버튼 레이아웃 바꾸기
+    private void changeButtonByOrder(Boolean viewStateThumb) {
+        if (viewStateThumb) {
+            viewListOrderByThumb.setTextSize(14);
+            viewListOrderByThumb.setBackgroundResource(R.drawable.bottom_border_line);
+            viewListOrderByLatest.setTextSize(12);
+            viewListOrderByLatest.setBackgroundResource(0);
+        } else {
+            viewListOrderByLatest.setTextSize(14);
+            viewListOrderByLatest.setBackgroundResource(R.drawable.bottom_border_line);
+            viewListOrderByThumb.setTextSize(12);
+            viewListOrderByThumb.setBackgroundResource(0);
+        }
     }
 
 
