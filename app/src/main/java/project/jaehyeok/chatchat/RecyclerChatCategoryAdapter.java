@@ -65,7 +65,7 @@ public class RecyclerChatCategoryAdapter extends RecyclerView.Adapter<RecyclerCh
     @Override
     public void onBindViewHolder(@NonNull RecyclerChatCategoryAdapter.ViewHolder holder, int position) {
 //        holder.textView.setText("안녕하세요" + position);
-        holder.chatRoomAdapter = new RecyclerChatRoomAdapter(chatDataSnapShotList, position, uid);
+        holder.chatRoomAdapter = new RecyclerChatRoomAdapter(chatDataSnapShotList, uid);
         holder.chatRoomRecyclerview.setAdapter(holder.chatRoomAdapter);
         holder.chatRoomRecyclerview.setLayoutManager(new LinearLayoutManager(holder.itemView.getContext()));
     }

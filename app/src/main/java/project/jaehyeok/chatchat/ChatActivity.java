@@ -48,6 +48,7 @@ public class ChatActivity extends AppCompatActivity {
 
     private String uid;
     private String databaseChatKey;
+    private String masterUid;
 
     private RecyclerView chatMessageRecyclerview;
     private RecyclerChatMessageAdapter chatMessageAdapter;
@@ -106,7 +107,7 @@ public class ChatActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 Chat chat = snapshot.getValue(Chat.class);
                 String title = chat.getTitle();
-                final String masterUid = chat.getMasterUid();
+                masterUid = chat.getMasterUid();
                 final int personnel = chat.getPersonnel();
 
                 // 채팅방 타이틀 최대인원 초기화
@@ -273,23 +274,24 @@ public class ChatActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                Map<String, Object> userThumb = new HashMap<>();
-                if (userThumbChatState) {
-                    // 좋아요 한 채팅방일때
-                    // 좋아요를 저장하는 데이터베이스에 <uid : null> 형태로 데이터를 삭제한다
-                    userThumb.put(uid, null);
-                    rootReference.child("thumb").child(databaseChatKey).updateChildren(userThumb);
-                    userThumbChatState = false;
-                    refreshThumbCount();
-                } else {
-                    // 아직 좋아요 상태가 아닐때
-                    // 좋아요를 저장하는 데이터베이스에 <uid : true> 형태로 데이터를 저장한다
-                    userThumb.put(uid, true);
-                    rootReference.child("thumb").child(databaseChatKey).updateChildren(userThumb);
-                    userThumbChatState = true;
+                if (!uid.equals(masterUid)) {
+
+                    Map<String, Object> userThumb = new HashMap<>();
+                    if (userThumbChatState) {
+                        // 좋아요 한 채팅방일때
+                        // 좋아요를 저장하는 데이터베이스에 <uid : null> 형태로 데이터를 삭제한다
+                        userThumb.put(uid, null);
+                        rootReference.child("thumb").child(databaseChatKey).updateChildren(userThumb);
+                        userThumbChatState = false;
+                    } else {
+                        // 아직 좋아요 상태가 아닐때
+                        // 좋아요를 저장하는 데이터베이스에 <uid : true> 형태로 데이터를 저장한다
+                        userThumb.put(uid, true);
+                        rootReference.child("thumb").child(databaseChatKey).updateChildren(userThumb);
+                        userThumbChatState = true;
+                    }
                     refreshThumbCount();
                 }
-
             }
         });
     }

@@ -6,16 +6,20 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserInfo;
@@ -30,7 +34,7 @@ import java.util.List;
 
 public class ChatListActivity extends AppCompatActivity {
 
-    private Button addChatButton;
+    private FloatingActionButton addChatButton;
 
     private FirebaseAuth firebaseAuth = null;
     private FirebaseDatabase firebaseDatabase; // 데이터베이스 진입
@@ -40,11 +44,15 @@ public class ChatListActivity extends AppCompatActivity {
     private RecyclerView chatCategoryRecyclerview;
     private RecyclerChatCategoryAdapter chatCategoryAdapter;
 
+    private RecyclerView chatListRecyclerview;
+    private RecyclerChatRoomAdapter chatListAdapter;
+
     private ArrayList<DataSnapshot> chatDataSnapShotList;
     private String uid;
 
     private static final int CREATE_CHAT = 7000;
 
+    @SuppressLint("ResourceType")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,15 +78,11 @@ public class ChatListActivity extends AppCompatActivity {
         // 최초 로그인일때 파이어베이스 DB 의 경로 users 에 새로운 유저 데이터를 생성한다
         verifyUserSavedDatabase(userProfile);
 //        chatCategoryRecyclerview.scrollToPosition(1);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
 
         // 파이어베이스 realtime database 에서 채팅 목록 가져오기
         // 리스트에 채팅데이터<DataSnapshot> 담아 리사이클러뷰의 어댑터로 전달한다
         // 해당 액티비티로 전환될 때 마다 추가된 데이터를 목록에 최신화하여 보여주기 위해 onResume 에서 구현
+        chatListRecyclerview = findViewById(R.id.chatCategoryRecyclerview);
         chatDataSnapShotList = new ArrayList<>();
         chatsReference.addListenerForSingleValueEvent(new ValueEventListener() {
             // addListenerForSingleValueEvent 실행될때 딱 한번 경로의 데이터를 불러온다
@@ -86,23 +90,45 @@ public class ChatListActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 for (DataSnapshot chatSnapShot: snapshot.getChildren()) {
-//                    System.out.println("////스냅샷/// : " + chatSnapShot);
                     chatDataSnapShotList.add(chatSnapShot);
-//                    System.out.println("//// 리스트////: " + chatDataSnapShotList);
                 }
 
                 // 카테고리별 채팅 목록
                 // 채팅목록에 대하여 인기순, 검색결과, 최신순으로 가로스크롤 형태로 지원한다
-                chatCategoryRecyclerview = findViewById(R.id.chatCategoryRecyclerview);
-                chatCategoryAdapter = new RecyclerChatCategoryAdapter(chatDataSnapShotList, uid);
-                chatCategoryRecyclerview.setAdapter(chatCategoryAdapter);
-                LinearLayoutManager chatCategoryLayoutManager = new LinearLayoutManager(ChatListActivity.this, LinearLayoutManager.HORIZONTAL, false);
-                chatCategoryRecyclerview.setLayoutManager(chatCategoryLayoutManager);
+//                chatCategoryRecyclerview = findViewById(R.id.chatCategoryRecyclerview);
+//                chatCategoryAdapter = new RecyclerChatCategoryAdapter(chatDataSnapShotList, uid);
+//                chatCategoryRecyclerview.setAdapter(chatCategoryAdapter);
+//                LinearLayoutManager chatCategoryLayoutManager = new LinearLayoutManager(ChatListActivity.this, LinearLayoutManager.HORIZONTAL, false);
+//                chatCategoryRecyclerview.setLayoutManager(chatCategoryLayoutManager);
+
+                chatListRecyclerview = findViewById(R.id.chatCategoryRecyclerview);
+                chatListAdapter = new RecyclerChatRoomAdapter(chatDataSnapShotList, uid);
+                chatListRecyclerview.setAdapter(chatListAdapter);
+                LinearLayoutManager chatListLayoutManager = new LinearLayoutManager(ChatListActivity.this);
+                chatListRecyclerview.setLayoutManager(chatListLayoutManager);
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
 
+            }
+        });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // 채팅목록을 아래로 스크롤할때 채팅추가버튼 사라지게하고, 올릴때는 다시 보이도록 한다
+        chatListRecyclerview.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                if (dy > 0) {
+                    // 아래로 스크롤 할 때
+                    addChatButton.hide();
+                } else if (dy < 0) {
+                    addChatButton.show();
+                }
             }
         });
 
@@ -120,15 +146,6 @@ public class ChatListActivity extends AppCompatActivity {
                 startActivityForResult(intent, CREATE_CHAT);
             }
         });
-
-        // 중첩 리사이클러뷰의 세로(채팅 목록) 아이템에 대한 클릭이벤트 처리
-//        RecyclerChatRoomAdapter adapter = null;
-//        adapter.setOnItemClickListener(new RecyclerChatRoomAdapter.OnItemClickListener() {
-//            @Override
-//            public void onItemCLick(View view, int position) {
-//
-//            }
-//        });
     }
 
     @Override

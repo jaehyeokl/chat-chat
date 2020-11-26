@@ -52,4 +52,6 @@ dependencies {
     // 카드뷰 사용 위한 위젯 추가
 //    implementation 'com.androidx.support:cardview-v7:26.1.0'
 //    implementation 'com.androidx.support:recyclerview-v7:26.1.0'
+    //noinspection GradleCompatible
+    implementation 'com.android.support:design:27.1.1'
 }
