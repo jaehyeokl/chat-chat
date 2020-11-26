@@ -40,15 +40,10 @@ public class ChatListActivity extends AppCompatActivity {
     private FloatingActionButton addChatButton;
     private ConstraintLayout parentLayout;
 
-    private Boolean viewStateThumb = true;
-
     private FirebaseAuth firebaseAuth = null;
     private FirebaseDatabase firebaseDatabase; // 데이터베이스 진입
     private DatabaseReference usersReference; // 데이터베이스경로 (path : users)
     private DatabaseReference chatsReference; // 데이터베이스경로 (path : chats)
-
-//    private RecyclerView chatCategoryRecyclerview;
-//    private RecyclerChatCategoryAdapter chatCategoryAdapter;
 
     private RecyclerView chatRecyclerviewByThumb;
     private RecyclerView chatRecyclerviewByLatest;
@@ -75,7 +70,7 @@ public class ChatListActivity extends AppCompatActivity {
         parentLayout = findViewById(R.id.activityChatListLayout);
 
         // 첫 실행 시 인기순 정렬
-        changeButtonByOrder(viewStateThumb);
+        changeButtonByOrder(true);
 
         // 파이어베이스 접근 권한 갖기
         firebaseAuth = FirebaseAuth.getInstance();
@@ -85,7 +80,6 @@ public class ChatListActivity extends AppCompatActivity {
         chatsReference = firebaseDatabase.getReference("chats");
         // String / Long / Double / Boolean / Map<String, Object> / List<Object>
 
-
         // 현재 로그인한 사용자 프로필 가져오기
         // ex) [로그인제공업체, uid, name, email]
         ArrayList<String> userProfile = getCurrentUserProfile();
@@ -94,28 +88,29 @@ public class ChatListActivity extends AppCompatActivity {
         // 파이어베이스 DB 에서 uid 를 통해 계정 데이터의 저장여부를 확인 / 최초 로그인 여부를 판별한다
         // 최초 로그인일때 파이어베이스 DB 의 경로 users 에 새로운 유저 데이터를 생성한다
         verifyUserSavedDatabase(userProfile);
-//        chatCategoryRecyclerview.scrollToPosition(1);
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
         // 파이어베이스 realtime database 에서 채팅 목록 가져오기
         // 리스트에 채팅데이터<DataSnapshot> 담아 리사이클러뷰의 어댑터로 전달한다
         // 해당 액티비티로 전환될 때 마다 추가된 데이터를 목록에 최신화하여 보여주기 위해 onResume 에서 구현
         chatRecyclerviewByThumb = findViewById(R.id.chatThumbRecyclerview);
         chatRecyclerviewByLatest = findViewById(R.id.chatLatestRecyclerview);
-        chatDataSnapShotByThumb = new ArrayList<>();
-        chatDataSnapShotByLatest = new ArrayList<>();
+        chatDataSnapShotByThumb = new ArrayList<>(); // 좋아요 순으로 저장할 리스트
+        chatDataSnapShotByLatest = new ArrayList<>(); // 최신순으로 저장할 리스트
         chatsReference.addListenerForSingleValueEvent(new ValueEventListener() {
             // addListenerForSingleValueEvent 실행될때 딱 한번 경로의 데이터를 불러온다
             // chats 경로에 저장된 모든 데이터(채팅)를 불러온다
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                int compare = -1;
                 for (DataSnapshot chatSnapShot: snapshot.getChildren()) {
-                    // 최신순으로 데이터를 정렬하기 위해 시간순서인 그대로 리스트에 저장한다
                     chatDataSnapShotByThumb.add(chatSnapShot);
                     chatDataSnapShotByLatest.add(chatSnapShot);
                 }
 
-                // 리스트를 좋아요순, 최신순으로 정렬하기
+                // 리스트를 각각 좋아요순, 최신순으로 정렬한다
                 Collections.sort(chatDataSnapShotByThumb, new Comparator<DataSnapshot>() {
                     @Override
                     public int compare(DataSnapshot t1, DataSnapshot t2) {
@@ -133,14 +128,14 @@ public class ChatListActivity extends AppCompatActivity {
                 Collections.reverse(chatDataSnapShotByThumb);
                 Collections.reverse(chatDataSnapShotByLatest);
 
-                // 좋아요 순 데이터 새로 만들기
+                // 좋아요 순서로 채팅을 정렬한 리사이클러뷰 초기화
                 chatRecyclerviewByThumb = findViewById(R.id.chatThumbRecyclerview);
                 chatThumbAdapter = new RecyclerChatRoomAdapter(chatDataSnapShotByThumb, uid);
                 chatRecyclerviewByThumb.setAdapter(chatThumbAdapter);
                 LinearLayoutManager chatThumbLayoutManager = new LinearLayoutManager(ChatListActivity.this);
                 chatRecyclerviewByThumb.setLayoutManager(chatThumbLayoutManager);
 
-                // 최신순 바로 적용
+                // 최신 순서로 채팅을 정렬한 리사이클러뷰 초기화
                 chatRecyclerviewByLatest = findViewById(R.id.chatLatestRecyclerview);
                 chatLatestAdapter = new RecyclerChatRoomAdapter(chatDataSnapShotByLatest, uid);
                 chatRecyclerviewByLatest.setAdapter(chatLatestAdapter);
@@ -154,12 +149,8 @@ public class ChatListActivity extends AppCompatActivity {
             }
         });
 
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        // 좋아요 순서 채팅목록을 아래로 스크롤할때 채팅추가버튼 사라지게하고, 올릴때는 다시 보이도록 한다
+        // 채팅 목록 리사이클러뷰를 아래로 스크롤 할 때 유저가 목록에 집중 할 수 있도록
+        // 채팅 생성 버튼을 보이지 않도록 설정, 반대로 올릴때 다시 나타난다
         chatRecyclerviewByThumb.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
@@ -175,6 +166,8 @@ public class ChatListActivity extends AppCompatActivity {
             }
         });
 
+        // 채팅 목록 리사이클러뷰를 아래로 스크롤 할 때 유저가 목록에 집중 할 수 있도록
+        // 채팅 생성 버튼을 보이지 않도록 설정, 반대로 올릴때 다시 나타난다
         chatRecyclerviewByLatest.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
@@ -239,7 +232,7 @@ public class ChatListActivity extends AppCompatActivity {
             }
         });
 
-        // 인기순 보기
+        // 좋아요 순서로 정렬하는 버튼이 시각적으로 선택된것 처럼 보이게 설정
         viewListOrderByThumb.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -250,12 +243,11 @@ public class ChatListActivity extends AppCompatActivity {
             }
         });
 
-        // 최신순 보기
+        // 최신 순서로 정렬하는 버튼이 시각적으로 선택된것 처럼 보이게 설정
         viewListOrderByLatest.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 changeButtonByOrder(false);
-                viewStateThumb = false;
                 chatRecyclerviewByLatest.setVisibility(View.VISIBLE);
                 chatRecyclerviewByThumb.setVisibility(View.INVISIBLE);
                 addChatButton.show();
