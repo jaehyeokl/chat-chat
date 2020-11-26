@@ -10,26 +10,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.Layout;
-import android.text.TextWatcher;
-import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -41,7 +29,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class ChatListActivity extends AppCompatActivity {
 
@@ -58,13 +47,16 @@ public class ChatListActivity extends AppCompatActivity {
     private DatabaseReference usersReference; // 데이터베이스경로 (path : users)
     private DatabaseReference chatsReference; // 데이터베이스경로 (path : chats)
 
-    private RecyclerView chatCategoryRecyclerview;
-    private RecyclerChatCategoryAdapter chatCategoryAdapter;
+//    private RecyclerView chatCategoryRecyclerview;
+//    private RecyclerChatCategoryAdapter chatCategoryAdapter;
 
-    private RecyclerView chatListRecyclerview;
-    private RecyclerChatRoomAdapter chatListAdapter;
+    private RecyclerView chatRecyclerviewByThumb;
+    private RecyclerView chatRecyclerviewByLatest;
+    private RecyclerChatRoomAdapter chatThumbAdapter;
+    private RecyclerChatRoomAdapter chatLatestAdapter;
 
-    private ArrayList<DataSnapshot> chatDataSnapShotList;
+    private ArrayList<DataSnapshot> chatDataSnapShotByThumb;
+    private ArrayList<DataSnapshot> chatDataSnapShotByLatest;
     private String uid;
 
     private static final int CREATE_CHAT = 7000;
@@ -107,30 +99,53 @@ public class ChatListActivity extends AppCompatActivity {
         // 파이어베이스 realtime database 에서 채팅 목록 가져오기
         // 리스트에 채팅데이터<DataSnapshot> 담아 리사이클러뷰의 어댑터로 전달한다
         // 해당 액티비티로 전환될 때 마다 추가된 데이터를 목록에 최신화하여 보여주기 위해 onResume 에서 구현
-        chatListRecyclerview = findViewById(R.id.chatCategoryRecyclerview);
-        chatDataSnapShotList = new ArrayList<>();
+        chatRecyclerviewByThumb = findViewById(R.id.chatThumbRecyclerview);
+        chatRecyclerviewByLatest = findViewById(R.id.chatLatestRecyclerview);
+        chatDataSnapShotByThumb = new ArrayList<>();
+        chatDataSnapShotByLatest = new ArrayList<>();
         chatsReference.addListenerForSingleValueEvent(new ValueEventListener() {
             // addListenerForSingleValueEvent 실행될때 딱 한번 경로의 데이터를 불러온다
             // chats 경로에 저장된 모든 데이터(채팅)를 불러온다
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                int compare = -1;
                 for (DataSnapshot chatSnapShot: snapshot.getChildren()) {
-                    chatDataSnapShotList.add(chatSnapShot);
+                    // 최신순으로 데이터를 정렬하기 위해 시간순서인 그대로 리스트에 저장한다
+                    chatDataSnapShotByThumb.add(chatSnapShot);
+                    chatDataSnapShotByLatest.add(chatSnapShot);
                 }
 
-                // 카테고리별 채팅 목록
-                // 채팅목록에 대하여 인기순, 검색결과, 최신순으로 가로스크롤 형태로 지원한다
-//                chatCategoryRecyclerview = findViewById(R.id.chatCategoryRecyclerview);
-//                chatCategoryAdapter = new RecyclerChatCategoryAdapter(chatDataSnapShotList, uid);
-//                chatCategoryRecyclerview.setAdapter(chatCategoryAdapter);
-//                LinearLayoutManager chatCategoryLayoutManager = new LinearLayoutManager(ChatListActivity.this, LinearLayoutManager.HORIZONTAL, false);
-//                chatCategoryRecyclerview.setLayoutManager(chatCategoryLayoutManager);
+                // 리스트를 좋아요순, 최신순으로 정렬하기
+                Collections.sort(chatDataSnapShotByThumb, new Comparator<DataSnapshot>() {
+                    @Override
+                    public int compare(DataSnapshot t1, DataSnapshot t2) {
+                        Chat chat1 = t1.getValue(Chat.class);
+                        Chat chat2 = t2.getValue(Chat.class);
 
-                chatListRecyclerview = findViewById(R.id.chatCategoryRecyclerview);
-                chatListAdapter = new RecyclerChatRoomAdapter(chatDataSnapShotList, uid);
-                chatListRecyclerview.setAdapter(chatListAdapter);
-                LinearLayoutManager chatListLayoutManager = new LinearLayoutManager(ChatListActivity.this);
-                chatListRecyclerview.setLayoutManager(chatListLayoutManager);
+                        if (chat1.getThumb() < chat2.getThumb()) {
+                            return -1;
+                        } else if (chat1.getThumb() > chat2.getThumb()) {
+                            return 1;
+                        }
+                        return 0;
+                    }
+                });
+                Collections.reverse(chatDataSnapShotByThumb);
+                Collections.reverse(chatDataSnapShotByLatest);
+
+                // 좋아요 순 데이터 새로 만들기
+                chatRecyclerviewByThumb = findViewById(R.id.chatThumbRecyclerview);
+                chatThumbAdapter = new RecyclerChatRoomAdapter(chatDataSnapShotByThumb, uid);
+                chatRecyclerviewByThumb.setAdapter(chatThumbAdapter);
+                LinearLayoutManager chatThumbLayoutManager = new LinearLayoutManager(ChatListActivity.this);
+                chatRecyclerviewByThumb.setLayoutManager(chatThumbLayoutManager);
+
+                // 최신순 바로 적용
+                chatRecyclerviewByLatest = findViewById(R.id.chatLatestRecyclerview);
+                chatLatestAdapter = new RecyclerChatRoomAdapter(chatDataSnapShotByLatest, uid);
+                chatRecyclerviewByLatest.setAdapter(chatLatestAdapter);
+                LinearLayoutManager chatLatestLayoutManager = new LinearLayoutManager(ChatListActivity.this);
+                chatRecyclerviewByLatest.setLayoutManager(chatLatestLayoutManager);
             }
 
             @Override
@@ -138,20 +153,40 @@ public class ChatListActivity extends AppCompatActivity {
 
             }
         });
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // 채팅목록을 아래로 스크롤할때 채팅추가버튼 사라지게하고, 올릴때는 다시 보이도록 한다
-        chatListRecyclerview.addOnScrollListener(new RecyclerView.OnScrollListener() {
+        // 좋아요 순서 채팅목록을 아래로 스크롤할때 채팅추가버튼 사라지게하고, 올릴때는 다시 보이도록 한다
+        chatRecyclerviewByThumb.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-                if (dy > 0) {
-                    // 아래로 스크롤 할 때
-                    addChatButton.hide();
-                } else if (dy < 0) {
-                    addChatButton.show();
+
+                if (chatRecyclerviewByThumb.getVisibility() == View.VISIBLE) {
+                    if (dy > 0) {
+                        // 아래로 스크롤 할 때
+                        addChatButton.hide();
+                    } else if (dy < 0) {
+                        addChatButton.show();
+                    }
+                }
+            }
+        });
+
+        chatRecyclerviewByLatest.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+
+                if (chatRecyclerviewByLatest.getVisibility() == View.VISIBLE) {
+                    if (dy > 0) {
+                        // 아래로 스크롤 할 때
+                        addChatButton.hide();
+                    } else if (dy < 0) {
+                        addChatButton.show();
+                    }
                 }
             }
         });
@@ -187,7 +222,7 @@ public class ChatListActivity extends AppCompatActivity {
                     // 검색입력창에 검색어 입력됐을때 해당내용으로 검색하기
                     if (inputSearchChat.getText() != null) {
                         CharSequence searchWord = inputSearchChat.getText();
-                        chatListAdapter.getFilter().filter(searchWord);
+                        chatLatestAdapter.getFilter().filter(searchWord);
                         Toast.makeText(ChatListActivity.this, searchWord.toString(), Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -209,7 +244,9 @@ public class ChatListActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 changeButtonByOrder(true);
-                viewStateThumb = true;
+                chatRecyclerviewByThumb.setVisibility(View.VISIBLE);
+                chatRecyclerviewByLatest.setVisibility(View.INVISIBLE);
+                addChatButton.show();
             }
         });
 
@@ -219,6 +256,9 @@ public class ChatListActivity extends AppCompatActivity {
             public void onClick(View view) {
                 changeButtonByOrder(false);
                 viewStateThumb = false;
+                chatRecyclerviewByLatest.setVisibility(View.VISIBLE);
+                chatRecyclerviewByThumb.setVisibility(View.INVISIBLE);
+                addChatButton.show();
             }
         });
     }
@@ -308,6 +348,4 @@ public class ChatListActivity extends AppCompatActivity {
             viewListOrderByThumb.setBackgroundResource(0);
         }
     }
-
-
 }

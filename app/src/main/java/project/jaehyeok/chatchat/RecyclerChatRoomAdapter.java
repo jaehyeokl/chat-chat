@@ -27,7 +27,6 @@ import java.util.Collections;
 // ChatListActivity 에서 채팅방 목록에 대한 리사이클러뷰 어댑터 (세로)
 public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRoomAdapter.ViewHolder> implements Filterable {
     private ArrayList<DataSnapshot> chatDataSnapShotList = null; // unfiltered
-    private int categoryPosition;
     private String uid;
 
     private ArrayList<DataSnapshot> filteredList;
@@ -193,20 +192,4 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
     public int getItemCount() {
         return filteredList.size();
     }
-
-    // 데이터 정렬하기
-    // 채팅방 목록의 리스트에서 가로목록의 포지션에 따른 채팅방 정렬 변경
-//    public void dataOrderByCategory() {
-//        switch(categoryPosition){
-//            case 0:
-//                // 최신 생성 순서로 정렬
-//                Collections.reverse(chatDataSnapShotList);
-//                break;
-//            case 1:
-//                // 이후에 좋아요 순서로 정렬
-//                break;
-//            default:
-//                break;
-//        }
-//    }
 }

@@ -34,7 +34,7 @@
     <!--        app:layout_constraintStart_toStartOf="parent" />-->
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/chatCategoryRecyclerview"
+        android:id="@+id/chatThumbRecyclerview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
 
@@ -105,5 +105,15 @@
         app:layout_constraintBottom_toBottomOf="@+id/textView3"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/textView3" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/chatLatestRecyclerview"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/chatThumbRecyclerview"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/chatThumbRecyclerview" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
