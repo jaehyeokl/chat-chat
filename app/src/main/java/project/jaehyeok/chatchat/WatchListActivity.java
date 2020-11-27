@@ -2,6 +2,7 @@ package project.jaehyeok.chatchat;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -38,7 +39,7 @@ public class WatchListActivity extends AppCompatActivity {
     private RecyclerView chatWatchListRecyclerview;
     private RecyclerView chatMyChatRecyclerview;
     private RecyclerChatRoomAdapter chatWatchListAdaptor;
-//    private RecyclerChatRoomAdapter chatLatestAdapter;
+    private RecyclerChatRoomAdapter chatLatestAdapter;
 
     private ArrayList<DataSnapshot> watchChatSnapShotList;
     private ArrayList<DataSnapshot> myChatSnapShotList;
@@ -62,18 +63,30 @@ public class WatchListActivity extends AppCompatActivity {
         // 좋아요한 채팅목록, 내가 만든 채팅목록 리사이클러뷰 초기화
         chatWatchListRecyclerview = findViewById(R.id.chatWatchListRecyclerview);
         chatMyChatRecyclerview = findViewById(R.id.chatMyChatRecyclerview);
+
+        ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(0,ItemTouchHelper.LEFT) {
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+
+            }
+        };
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        // 파이어베이스 realtime database 에서 채팅 목록 가져오기
-        // 리스트에 채팅데이터<DataSnapshot> 담아 리사이클러뷰의 어댑터로 전달한다
+        // 좋아요한 채팅목록, 내가 만든 채팅 목록을 보여주기 위해
+        // 파이어베이스 데이터베이스에서 채팅데이터를 리스트에 후 리사이클러뷰의 어댑터에 전달한다
         // 해당 액티비티로 전환될 때 마다 추가된 데이터를 목록에 최신화하여 보여주기 위해 onResume 에서 구현
+
+        // 좋아요한 채팅방 목록 구현하기
         watchChatSnapShotList = new ArrayList<>(); // 좋아요 순으로 저장할 리스트
-        myChatSnapShotList = new ArrayList<>(); // 최신순으로 저장할 리스트
-        // 내가 좋아요 한 채팅방
         rootReference.child("thumb").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -103,14 +116,16 @@ public class WatchListActivity extends AppCompatActivity {
                             String chatKey = dataSnapshot.getKey();
                             if (thumbUserChatKeyList.contains(chatKey)) {
                                 watchChatSnapShotList.add(dataSnapshot);
-
-                                chatWatchListAdaptor = new RecyclerChatRoomAdapter(watchChatSnapShotList, uid);
-                                chatWatchListRecyclerview.setAdapter(chatWatchListAdaptor);
-                                LinearLayoutManager chatThumbLayoutManager = new LinearLayoutManager(WatchListActivity.this);
-                                chatWatchListRecyclerview.setLayoutManager(chatThumbLayoutManager);
-
                             }
                         }
+                        chatWatchListAdaptor = new RecyclerChatRoomAdapter(watchChatSnapShotList, uid);
+                        chatWatchListRecyclerview.setAdapter(chatWatchListAdaptor);
+                        LinearLayoutManager chatThumbLayoutManager = new LinearLayoutManager(WatchListActivity.this);
+                        chatWatchListRecyclerview.setLayoutManager(chatThumbLayoutManager);
+
+                        ItemTouchHelper.Callback callback = new ThumbChatItemTouchHelper(chatWatchListAdaptor);
+                        ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
+                        touchHelper.attachToRecyclerView(chatWatchListRecyclerview);
                     }
 
                     @Override
@@ -126,34 +141,30 @@ public class WatchListActivity extends AppCompatActivity {
             }
         });
 
+        // 내가 만든 채팅방목록 구현하기
+        myChatSnapShotList = new ArrayList<>(); // 최신순으로 저장할 리스트
+        rootReference.child("chats").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                for (DataSnapshot chatSnapShot: snapshot.getChildren()) {
+                    Chat chat = chatSnapShot.getValue(Chat.class);
+                    String masterUid = chat.getMasterUid();
+                    // chats 데이터베이스에서 채팅개설자의 uid (masterUid) 가 현재 로그인한 uid 와 같을때 리스트에 저장
+                    if (masterUid.equals(uid)) {
+                        myChatSnapShotList.add(chatSnapShot);
+                    }
+                }
+                chatLatestAdapter = new RecyclerChatRoomAdapter(myChatSnapShotList, uid);
+                chatMyChatRecyclerview.setAdapter(chatLatestAdapter);
+                LinearLayoutManager chatThumbLayoutManager = new LinearLayoutManager(WatchListActivity.this);
+                chatMyChatRecyclerview.setLayoutManager(chatThumbLayoutManager);
+            }
 
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
 
-
-
-        // 내가 방장인 채팅방
-//        chatsReference.addListenerForSingleValueEvent(new ValueEventListener() {
-//            // addListenerForSingleValueEvent 실행될때 딱 한번 경로의 데이터를 불러온다
-//            // chats 경로에 저장된 모든 데이터(채팅)를 불러온다
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot snapshot) {
-//                for (DataSnapshot chatSnapShot: snapshot.getChildren()) {
-//                    chatDataSnapShotByThumb.add(chatSnapShot);
-//                    chatDataSnapShotByLatest.add(chatSnapShot);
-//                }
-//
-//                // 좋아요 순서로 채팅을 정렬한 리사이클러뷰 초기화
-//                chatRecyclerviewByThumb = findViewById(R.id.chatThumbRecyclerview);
-//                chatThumbAdapter = new RecyclerChatRoomAdapter(chatDataSnapShotByThumb, uid);
-//                chatRecyclerviewByThumb.setAdapter(chatThumbAdapter);
-//                LinearLayoutManager chatThumbLayoutManager = new LinearLayoutManager(ChatListActivity.this);
-//                chatRecyclerviewByThumb.setLayoutManager(chatThumbLayoutManager);
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError error) {
-//
-//            }
-//        });
+            }
+        });
 
         // 하단 네비게이션을 통한 메뉴 이동
         bottomNavigation.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
