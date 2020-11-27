@@ -42,6 +42,7 @@ public class ChatListActivity extends AppCompatActivity {
     private FloatingActionButton addChatButton;
     private ConstraintLayout parentLayout;
     private BottomNavigationView bottomNavigation;
+    private BackPressHandler backPressHandler = new BackPressHandler(this);
 
     private FirebaseAuth firebaseAuth = null;
     private FirebaseDatabase firebaseDatabase; // 데이터베이스 진입
@@ -370,5 +371,11 @@ public class ChatListActivity extends AppCompatActivity {
             viewListOrderByThumb.setTextSize(12);
             viewListOrderByThumb.setBackgroundResource(0);
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        //super.onBackPressed();
+        backPressHandler.onBackPressed();
     }
 }

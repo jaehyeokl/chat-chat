@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText inputPassword;
     private Button signInEmail;
     private Button signUpEmail;
+    private BackPressHandler backPressHandler = new BackPressHandler(this);
 
     private FirebaseAuth firebaseAuth = null;
     private GoogleSignInClient googleSignInClient;
@@ -238,5 +239,11 @@ public class MainActivity extends AppCompatActivity {
             // 로그인 하지 않았음
         }
         return userProfile;
+    }
+
+    @Override
+    public void onBackPressed() {
+        //super.onBackPressed();
+        backPressHandler.onBackPressed();
     }
 }

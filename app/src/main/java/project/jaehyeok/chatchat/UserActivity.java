@@ -13,6 +13,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 public class UserActivity extends AppCompatActivity {
 
     private BottomNavigationView bottomNavigation;
+    private BackPressHandler backPressHandler = new BackPressHandler(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,5 +46,11 @@ public class UserActivity extends AppCompatActivity {
                 return false;
             }
         });
+    }
+
+    @Override
+    public void onBackPressed() {
+        //super.onBackPressed();
+        backPressHandler.onBackPressed();
     }
 }
