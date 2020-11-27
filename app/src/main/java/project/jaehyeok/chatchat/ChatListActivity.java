@@ -11,6 +11,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -18,6 +19,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -39,6 +41,7 @@ public class ChatListActivity extends AppCompatActivity {
     private TextView viewListOrderByLatest, viewListOrderByThumb;
     private FloatingActionButton addChatButton;
     private ConstraintLayout parentLayout;
+    private BottomNavigationView bottomNavigation;
 
     private FirebaseAuth firebaseAuth = null;
     private FirebaseDatabase firebaseDatabase; // 데이터베이스 진입
@@ -68,6 +71,7 @@ public class ChatListActivity extends AppCompatActivity {
         viewListOrderByThumb = findViewById(R.id.viewListOrderByThumb);
         addChatButton = findViewById(R.id.addChatButton);
         parentLayout = findViewById(R.id.activityChatListLayout);
+        bottomNavigation = findViewById(R.id.bottomNavigation);
 
         // 첫 실행 시 인기순 정렬
         changeButtonByOrder(true);
@@ -251,6 +255,33 @@ public class ChatListActivity extends AppCompatActivity {
                 chatRecyclerviewByLatest.setVisibility(View.VISIBLE);
                 chatRecyclerviewByThumb.setVisibility(View.INVISIBLE);
                 addChatButton.show();
+            }
+        });
+
+        // 하단 네비게이션을 통한 메뉴 이동
+        bottomNavigation.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+            @SuppressLint("ResourceType")
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                Intent intent;
+                switch (item.getItemId()) {
+                    case R.id.actionHome:
+                        //
+                        return true;
+                    case R.id.actionWatch:
+                        intent = new Intent(getApplicationContext(), WatchListActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                        return true;
+                    case R.id.actionUser:
+                        intent = new Intent(getApplicationContext(), UserActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                        return true;
+                }
+                return false;
             }
         });
     }

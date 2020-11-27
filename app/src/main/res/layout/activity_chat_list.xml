@@ -23,16 +23,6 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="@+id/searchChatButton" />
 
-    <!--    <Button-->
-    <!--        android:id="@+id/addChatButton"-->
-    <!--        android:layout_width="wrap_content"-->
-    <!--        android:layout_height="wrap_content"-->
-    <!--        android:text="채팅개설"-->
-    <!--        app:layout_constraintBottom_toBottomOf="parent"-->
-    <!--        app:layout_constraintEnd_toEndOf="parent"-->
-    <!--        app:layout_constraintHorizontal_bias="0.95"-->
-    <!--        app:layout_constraintStart_toStartOf="parent" />-->
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/chatThumbRecyclerview"
         android:layout_width="match_parent"
@@ -124,7 +114,7 @@
         app:layout_constraintGuide_end="50dp" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/navigation"
+        android:id="@+id/bottomNavigation"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="#FFFFFF"
@@ -132,5 +122,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/guideline"
-        app:menu="@menu/bottom_navigation" />
+        app:menu="@menu/bottom_navigation"
+        app:itemIconTint="@drawable/menu_selector_color"
+        app:itemTextColor="@drawable/menu_selector_color" />
 </androidx.constraintlayout.widget.ConstraintLayout>

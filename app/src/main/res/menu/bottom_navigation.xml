@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/home"
+        android:id="@+id/actionHome"
         android:icon="@drawable/ic_menu_home"
         android:enabled="true"
         android:title="home" />
     <item
-        android:id="@+id/thumb"
+        android:id="@+id/actionWatch"
         android:icon="@drawable/ic_menu_thumb"
         android:enabled="true"
         android:checked="true"
-        android:title="my" />
+        android:title="watch" />
     <item
-        android:id="@+id/user"
+        android:id="@+id/actionUser"
         android:icon="@drawable/ic_menu_user"
         android:enabled="true"
         android:title="user" />
