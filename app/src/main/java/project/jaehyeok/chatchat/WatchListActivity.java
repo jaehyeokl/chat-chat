@@ -9,8 +9,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Canvas;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.database.DataSnapshot;
@@ -44,6 +46,10 @@ public class WatchListActivity extends AppCompatActivity {
     private ArrayList<DataSnapshot> watchChatSnapShotList;
     private ArrayList<DataSnapshot> myChatSnapShotList;
 
+    private static final int SELECT_WATCH_LAYOUT = 1;
+
+    private ThumbChatItemTouchHelper thumbChatItemTouchHelper = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,18 +69,6 @@ public class WatchListActivity extends AppCompatActivity {
         // 좋아요한 채팅목록, 내가 만든 채팅목록 리사이클러뷰 초기화
         chatWatchListRecyclerview = findViewById(R.id.chatWatchListRecyclerview);
         chatMyChatRecyclerview = findViewById(R.id.chatMyChatRecyclerview);
-
-        ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(0,ItemTouchHelper.LEFT) {
-            @Override
-            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-                return false;
-            }
-
-            @Override
-            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-
-            }
-        };
     }
 
     @Override
@@ -118,14 +112,39 @@ public class WatchListActivity extends AppCompatActivity {
                                 watchChatSnapShotList.add(dataSnapshot);
                             }
                         }
-                        chatWatchListAdaptor = new RecyclerChatRoomAdapter(watchChatSnapShotList, uid);
+                        chatWatchListAdaptor = new RecyclerChatRoomAdapter(watchChatSnapShotList, uid, SELECT_WATCH_LAYOUT);
                         chatWatchListRecyclerview.setAdapter(chatWatchListAdaptor);
                         LinearLayoutManager chatThumbLayoutManager = new LinearLayoutManager(WatchListActivity.this);
                         chatWatchListRecyclerview.setLayoutManager(chatThumbLayoutManager);
 
+//                        ItemTouchHelper.Callback callback = new ThumbChatItemTouchHelper(chatWatchListAdaptor);
+//                        ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
+//                        touchHelper.attachToRecyclerView(chatWatchListRecyclerview);
+                        thumbChatItemTouchHelper = new ThumbChatItemTouchHelper(new ThumbChatItemAction() {
+                            @Override
+                            public void onLeftClicked(int position) {
+                                super.onLeftClicked(position);
+                                Toast.makeText(WatchListActivity.this, "왼쪽", Toast.LENGTH_SHORT).show();
+
+                            }
+
+                            @Override
+                            public void onRightClicked(int position) {
+                                super.onRightClicked(position);
+                                Toast.makeText(WatchListActivity.this, "오른쪽", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+
                         ItemTouchHelper.Callback callback = new ThumbChatItemTouchHelper(chatWatchListAdaptor);
-                        ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
+                        final ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
                         touchHelper.attachToRecyclerView(chatWatchListRecyclerview);
+                        chatWatchListRecyclerview.addItemDecoration(new RecyclerView.ItemDecoration() {
+                            @Override
+                            public void onDraw(@NonNull Canvas c, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
+                                super.onDraw(c, parent, state);
+                                thumbChatItemTouchHelper.onDraw(c);
+                            }
+                        });
                     }
 
                     @Override
@@ -154,6 +173,7 @@ public class WatchListActivity extends AppCompatActivity {
                         myChatSnapShotList.add(chatSnapShot);
                     }
                 }
+                // 세번째 인자의 값을 통해 리사이클러뷰 어댑터에서 다른 레이아웃을 사용하도록 한다
                 chatLatestAdapter = new RecyclerChatRoomAdapter(myChatSnapShotList, uid);
                 chatMyChatRecyclerview.setAdapter(chatLatestAdapter);
                 LinearLayoutManager chatThumbLayoutManager = new LinearLayoutManager(WatchListActivity.this);
