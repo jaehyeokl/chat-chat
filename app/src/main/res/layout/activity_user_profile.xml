@@ -48,6 +48,7 @@
         android:id="@+id/userProfileAddImage"
         android:layout_width="20dp"
         android:layout_height="20dp"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="@+id/userProfileImage"
         app:layout_constraintEnd_toEndOf="@+id/userProfileImage"
         app:srcCompat="@drawable/ic_add_message" />
@@ -106,7 +107,7 @@
     <ImageView
         android:id="@+id/userProfileImage"
         android:layout_width="80dp"
-        android:layout_height="wrap_content"
+        android:layout_height="80dp"
         android:layout_marginTop="80dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
