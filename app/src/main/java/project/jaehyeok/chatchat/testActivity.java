@@ -29,7 +29,7 @@ public class testActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_test);
 
-        logoutButton = findViewById(R.id.logout);
+        logoutButton = findViewById(R.id.logoutButton);
 
         firebaseAuth = FirebaseAuth.getInstance();
 
