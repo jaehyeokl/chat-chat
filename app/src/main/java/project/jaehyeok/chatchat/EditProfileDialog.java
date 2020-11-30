@@ -136,29 +136,38 @@ public class EditProfileDialog {
                 dialogTitle.setText("비밀번호 변경");
                 final EditText inputPassword = dialog.findViewById(R.id.inputChangePassword);
                 final EditText inputPasswordCheck = dialog.findViewById(R.id.inpupCheckPassword);
+                final TextView checkPasswordMessage = dialog.findViewById(R.id.checkPasswordMessge);
                 inputPassword.requestFocus();
 
                 // 변경 사항 저장 눌렀을때
                 editDialogSave.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        // 파이어베이스 Auth 에 변경된 비밀번호를 설정한다
+                        // 비밀번호 재입력값과 비밀번호가 일치할때
+                        checkPasswordMessage.setVisibility(View.INVISIBLE);
                         String newPassword = inputPassword.getText().toString().trim();
-                        userAuth.updatePassword(newPassword)
-                                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                    @Override
-                                    public void onComplete(@NonNull Task<Void> task) {
-                                        if (task.isSuccessful()) {
-                                            Toast.makeText(context, "비밀번호 변경완료.", Toast.LENGTH_SHORT).show();
-                                        }
-                                    }
-                                });
+                        String checkPassword = inputPasswordCheck.getText().toString().trim();
 
-                        // 커스텀 다이얼로그를 종료한다.
-                        // 종료이후 키보드가 떠있기 때문에 강제로 키보드를 숨긴다
-                        dialog.dismiss();
-                        InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
-                        imm.hideSoftInputFromWindow(view.getWindowToken(), 0 );
+                        if (newPassword.equals(checkPassword)) {
+                            // 파이어베이스 Auth 에 변경된 비밀번호를 설정한다
+                            userAuth.updatePassword(newPassword)
+                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<Void> task) {
+                                            if (task.isSuccessful()) {
+                                                Toast.makeText(context, "비밀번호 변경완료.", Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+                                    });
+
+                            // 커스텀 다이얼로그를 종료한다.
+                            // 종료이후 키보드가 떠있기 때문에 강제로 키보드를 숨긴다
+                            dialog.dismiss();
+                            InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+                            imm.hideSoftInputFromWindow(view.getWindowToken(), 0 );
+                        } else {
+                            checkPasswordMessage.setVisibility(View.VISIBLE);
+                        }
                     }
                 });
                 break;
