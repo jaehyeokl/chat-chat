@@ -140,15 +140,16 @@ public class UserProfileActivity extends AppCompatActivity {
                 // 이미지 로드 성공시
                 Glide.with(getApplicationContext())
                         .load(uri)
+                        .circleCrop()
                         .into(userProfileImage);
-                }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception exception) {
-                    //이미지 로드 실패시
-                    //Toast.makeText(getApplicationContext(), "실패", Toast.LENGTH_SHORT).show();
-                }
-            });
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                //이미지 로드 실패시
+                //Toast.makeText(getApplicationContext(), "실패", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
@@ -199,19 +200,6 @@ public class UserProfileActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
-        if (resultCode != RESULT_OK) {
-            Toast.makeText(this, "이미지 업로드 실패", Toast.LENGTH_SHORT).show();
-//            if (tempFile != null) {
-//                if (tempFile.exists()) {
-//                    if (tempFile.delete()) {
-//                        Log.e(TAG, tempFile.getAbsolutePath() + " 삭제 성공");
-//                        tempFile = null;
-//                    }
-//                }
-//            }
-            return;
-        }
 
         switch (requestCode) {
             case PICK_FROM_ALBUM: { // 갤러리에서 이미지 가져왔을때

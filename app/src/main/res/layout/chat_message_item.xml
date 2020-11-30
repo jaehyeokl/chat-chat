@@ -12,7 +12,10 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:layout_marginBottom="10dp"
+        android:background="@drawable/chat_bubble_user"
+        android:gravity="center_vertical"
         android:hint="user"
+        android:maxWidth="200dp"
         android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -24,7 +27,10 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:layout_marginBottom="10dp"
+        android:background="@drawable/chat_bubble_other"
+        android:gravity="center_vertical"
         android:hint="other"
+        android:maxWidth="200dp"
         android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="@+id/chatUserName"
@@ -34,9 +40,11 @@
         android:id="@+id/chatUserName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="3dp"
+        android:layout_marginTop="4dp"
         android:hint="name"
         android:textSize="18sp"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/chatUserProfile"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
@@ -51,4 +59,14 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/chatUserProfile"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginStart="2dp"
+        android:layout_marginTop="4dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:srcCompat="@drawable/profile_image_default" />
 </androidx.constraintlayout.widget.ConstraintLayout>

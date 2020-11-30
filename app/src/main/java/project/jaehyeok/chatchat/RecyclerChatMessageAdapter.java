@@ -1,18 +1,29 @@
 package project.jaehyeok.chatchat;
 
 import android.content.Context;
+import android.net.Uri;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
 
@@ -21,6 +32,9 @@ public class RecyclerChatMessageAdapter extends RecyclerView.Adapter<RecyclerCha
     ArrayList<Message> chatMessageList;
     String currentUserUid;
     String checkPreviousUid = "";
+
+    private FirebaseStorage firebaseStorage = FirebaseStorage.getInstance();
+    private StorageReference storageReference= firebaseStorage.getReference();
 
     // 생성자를 통해 목록에 나타낼 데이터를 전달 받는다
     public RecyclerChatMessageAdapter(ArrayList<Message> chatMessageList, String currentUserUid) {
@@ -34,6 +48,7 @@ public class RecyclerChatMessageAdapter extends RecyclerView.Adapter<RecyclerCha
         private TextView chatMessageOther;
         private TextView chatMessageUser;
         private TextView chatMessageBroadcast;
+        private ImageView chatUserProfile;
 
         private FirebaseDatabase firebaseDatabase; // 데이터베이스 진입
         private DatabaseReference usersReference;
@@ -44,6 +59,7 @@ public class RecyclerChatMessageAdapter extends RecyclerView.Adapter<RecyclerCha
             chatMessageOther = itemView.findViewById(R.id.chatMessageOther);
             chatMessageUser = itemView.findViewById(R.id.chatMessageUser);
             chatMessageBroadcast = itemView.findViewById(R.id.chatMessageBroadcast);
+            chatUserProfile = itemView.findViewById(R.id.chatUserProfile);
             // 파이어베이스 realtime database 접근 설정
             firebaseDatabase = FirebaseDatabase.getInstance();
             usersReference = firebaseDatabase.getReference("users");
@@ -66,7 +82,7 @@ public class RecyclerChatMessageAdapter extends RecyclerView.Adapter<RecyclerCha
 
     // 만들어진 아이템에 보여줄 데이터를 반영한다
     @Override
-    public void onBindViewHolder(@NonNull RecyclerChatMessageAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull final RecyclerChatMessageAdapter.ViewHolder holder, int position) {
         Message message = chatMessageList.get(position);
         String getUid = message.getUid();
 
@@ -78,6 +94,7 @@ public class RecyclerChatMessageAdapter extends RecyclerView.Adapter<RecyclerCha
                 // 카카오톡처럼 오른쪽 정렬 및 내 닉네임 보이지 않도록 설정한다
                 holder.chatUserName.setVisibility(View.GONE);
                 holder.chatMessageOther.setVisibility(View.GONE);
+                holder.chatUserProfile.setVisibility(View.GONE);
                 holder.chatMessageUser.setText(message.getMessage());
 
             } else {
@@ -96,12 +113,32 @@ public class RecyclerChatMessageAdapter extends RecyclerView.Adapter<RecyclerCha
 
                 // 일단 보류
                 holder.chatUserName.setText(message.getShowName());
+
+                // 상대 프로필 이미지
+//                System.out.println("@@@@@@@@@@@@");
+//                storageReference.child("profile_image/" + getUid).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+//                    @Override
+//                    public void onSuccess(Uri uri) {
+//                        // 이미지 로드 성공시
+//                        Glide.with(holder.itemView.getContext())
+//                                .load(uri)
+//                                .circleCrop()
+//                                .into(holder.chatUserProfile);
+//                    }
+//                }).addOnFailureListener(new OnFailureListener() {
+//                    @Override
+//                    public void onFailure(@NonNull Exception exception) {
+//                        //이미지 로드 실패시
+//                        // Toast.makeText(holder.itemView.getContext(), "실패", Toast.LENGTH_SHORT).show();
+//                    }
+//                });
             }
         } else {
             // 전체메세지일때
             holder.chatUserName.setVisibility(View.GONE);
             holder.chatMessageOther.setVisibility(View.GONE);
             holder.chatMessageUser.setVisibility(View.GONE);
+            holder.chatUserProfile.setVisibility(View.GONE);
             holder.chatMessageBroadcast.setVisibility(View.VISIBLE);
             holder.chatMessageBroadcast.setText(message.getMessage());
         }

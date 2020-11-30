@@ -10,18 +10,24 @@ import android.content.SharedPreferences;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 public class UserActivity extends AppCompatActivity {
 
@@ -36,6 +42,9 @@ public class UserActivity extends AppCompatActivity {
     private String uid;
     private FirebaseDatabase firebaseDatabase; // 데이터베이스 진입
     private DatabaseReference rootReference;
+
+    private FirebaseStorage firebaseStorage;
+    private StorageReference storageReference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +76,11 @@ public class UserActivity extends AppCompatActivity {
         firebaseDatabase = FirebaseDatabase.getInstance();
         rootReference = firebaseDatabase.getReference();
 
-        // 유저데이터베이스에서 유저 정보 초기화
+        //파이어베이스 storage 접근 설정
+        firebaseStorage = FirebaseStorage.getInstance();
+        storageReference = firebaseStorage.getReference();
+
+        // 유저데이터베이스에서 유저 이름, 이메일 초기화
         rootReference.child("users").child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -86,7 +99,23 @@ public class UserActivity extends AppCompatActivity {
             }
         });
 
-        // 프로필사진, 이름, 메일 불러오기
+        // storage 에서 유저 프로필사진 불러오기
+        storageReference.child("profile_image/" + uid).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+            @Override
+            public void onSuccess(Uri uri) {
+                // 이미지 로드 성공시
+                Glide.with(getApplicationContext())
+                        .load(uri)
+                        .circleCrop()
+                        .into(userProfileImage);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                //이미지 로드 실패시
+                //Toast.makeText(getApplicationContext(), "실패", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
