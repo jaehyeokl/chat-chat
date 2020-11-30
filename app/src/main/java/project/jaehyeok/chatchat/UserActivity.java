@@ -6,6 +6,7 @@ import androidx.constraintlayout.widget.Group;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
@@ -16,8 +17,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 public class UserActivity extends AppCompatActivity {
 
@@ -29,9 +33,9 @@ public class UserActivity extends AppCompatActivity {
     private BottomNavigationView bottomNavigation;
     private BackPressHandler backPressHandler = new BackPressHandler(this);
 
+    private String uid;
     private FirebaseDatabase firebaseDatabase; // 데이터베이스 진입
-    private DatabaseReference usersReference; // 데이터베이스경로 (path : users)
-    private DatabaseReference chatsReference; // 데이터베이스경로 (path : chats)
+    private DatabaseReference rootReference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,22 +55,43 @@ public class UserActivity extends AppCompatActivity {
 //        userProfileImage.setBackground(drawable);
 //        userProfileImage.setClipToOutline(true);
 
-
+        // 네비게이션의 아이콘이 유저아이콘에 포커스되어있도록 설정
         bottomNavigation = findViewById(R.id.bottomNavigation);
         bottomNavigation.setSelectedItemId(R.id.actionUser);
 
+        // SharedPreferences 에 저장된 uid 가져오기
+        SharedPreferences sharedPreferences = getSharedPreferences("firebaseAuth", MODE_PRIVATE);
+        uid = sharedPreferences.getString("uid",null);
+
         // 파이어베이스 realtime database 접근 설정
         firebaseDatabase = FirebaseDatabase.getInstance();
-        usersReference = firebaseDatabase.getReference("users");
-        chatsReference = firebaseDatabase.getReference("chats");
+        rootReference = firebaseDatabase.getReference();
 
+        // 유저데이터베이스에서 유저 정보 초기화
+        rootReference.child("users").child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                UserData userData = snapshot.getValue(UserData.class);
 
+                String userName = userData.getName();
+                String userEmail = userData.getEmail();
+
+                userProfileName.setText(userName);
+                userProfileEmail.setText(userEmail);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+        // 프로필사진, 이름, 메일 불러오기
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
         // 유저프로필 클릭 시 내정보 상세페이지 이동
         int userProfileGroupIds[] = userProfileGroup.getReferencedIds();
         for (int id : userProfileGroupIds) {

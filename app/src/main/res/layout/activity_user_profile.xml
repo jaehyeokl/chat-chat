@@ -28,7 +28,6 @@
         app:layout_constraintTop_toBottomOf="@+id/textView10" />
 
 
-
     <Button
         android:id="@+id/userProfileName"
         android:layout_width="300dp"
@@ -62,7 +61,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
-
 
 
     <TextView
@@ -123,5 +121,11 @@
         app:layout_constraintEnd_toEndOf="@+id/changePassword"
         app:layout_constraintTop_toTopOf="@+id/changePassword"
         app:srcCompat="@drawable/arrow_right" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/userProfileImageGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="userProfileImage, userProfileAddImage" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
