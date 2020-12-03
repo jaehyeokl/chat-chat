@@ -1,4 +1,4 @@
-package project.jaehyeok.chatchat;
+package project.jaehyeok.chatchat.data;
 
 public class Message {
     public boolean broadcast = false;

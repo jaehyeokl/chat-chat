@@ -1,4 +1,4 @@
-package project.jaehyeok.chatchat;
+package project.jaehyeok.chatchat.data;
 
 public class Chat {
     public String masterUid;
