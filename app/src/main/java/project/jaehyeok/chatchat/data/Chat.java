@@ -6,6 +6,7 @@ public class Chat {
     public String title;
     public int personnel;
     public int thumb;
+    public long deleteAt;
 
     public Chat() {
         // Default constructor required for calls to DataSnapshot.getValue
@@ -21,39 +22,23 @@ public class Chat {
         return masterUid;
     }
 
-    public void setMasterUid(String masterUid) {
-        this.masterUid = masterUid;
-    }
-
     public long getTimestamp() {
         return timestamp;
-    }
-
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
     }
 
     public String getTitle() {
         return title;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
     public int getPersonnel() {
         return personnel;
-    }
-
-    public void setPersonnel(int personnel) {
-        this.personnel = personnel;
     }
 
     public int getThumb() {
         return thumb;
     }
 
-    public void setThumb(int thumb) {
-        this.thumb = thumb;
+    public long getDeleteAt() {
+        return deleteAt;
     }
 }

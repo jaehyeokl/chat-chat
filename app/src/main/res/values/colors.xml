@@ -4,7 +4,7 @@
     <color name="colorPrimaryDark">#3700B3</color>
     <color name="colorAccent">#03DAC5</color>
 
-    <color name="swipeButtonBackground">#BCBCBC</color>
+    <color name="swipeButtonBackground">#81BFB9</color>
 
     <drawable name="main_list_item_select">#33DDDDDD</drawable>
     <drawable name="main_list_item">#ffffff</drawable>

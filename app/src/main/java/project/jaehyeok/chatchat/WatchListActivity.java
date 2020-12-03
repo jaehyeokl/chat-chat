@@ -24,6 +24,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -42,14 +43,16 @@ public class WatchListActivity extends AppCompatActivity {
     private RecyclerView chatWatchListRecyclerview;
     private RecyclerView chatMyChatRecyclerview;
     private RecyclerChatRoomAdapter chatWatchListAdaptor;
-    private RecyclerChatRoomAdapter chatLatestAdapter;
+    private RecyclerChatRoomAdapter chatMyChatAdapter;
 
     private ArrayList<DataSnapshot> watchChatSnapShotList;
     private ArrayList<DataSnapshot> myChatSnapShotList;
 
     private static final int SELECT_WATCH_LAYOUT = 1;
 
-    private ThumbChatItemTouchHelper thumbChatItemTouchHelper = null;
+    private WatchItemTouchHelper thumbChatItemTouchHelper = null;
+    private WatchItemTouchHelper myChatItemTouchHelper = null;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,7 +124,7 @@ public class WatchListActivity extends AppCompatActivity {
                         // 관심 채팅목록의 아이템에대한 스와이프기능 설정
                         // 터치 감지 이벤트를 활용하는 ItemTouchHelper 메소드를 이용해 관심 목록에서의 스와이프 기능을 정의하여 사용한다
                         // (ThumbChatItemTouchHelper.java 에서 정의됨)
-                        thumbChatItemTouchHelper = new ThumbChatItemTouchHelper(getApplicationContext(), new ThumbChatItemAction() {
+                        thumbChatItemTouchHelper = new WatchItemTouchHelper(0, getApplicationContext(), new WatchItemAction() {
                             @Override
                             public void onLeftClicked(int position) {
                                 super.onLeftClicked(position);
@@ -150,6 +153,7 @@ public class WatchListActivity extends AppCompatActivity {
                                                 String chatUniqueKey = getChatData.getKey();
                                                 // 채팅방 unique key 와 유저 uid 를 통해 DB에 접근하여 값을 좋아요 여부를 삭제한다
                                                 rootReference.child("thumb").child(chatUniqueKey).child(uid).setValue(null);
+                                                // todo chats 의 좋아요 수 직접 하나 빼거나 새로 계산하여 적용해야한다
 
                                                 chatWatchListAdaptor.filteredList.remove(position);
                                                 chatWatchListAdaptor.notifyItemRemoved(position);
@@ -159,7 +163,7 @@ public class WatchListActivity extends AppCompatActivity {
                                 builder.setNegativeButton("아니오",
                                         new DialogInterface.OnClickListener() {
                                             public void onClick(DialogInterface dialog, int which) {
-                                                //Toast.makeText(getApplicationContext(),"아니오를 선택했습니다.",Toast.LENGTH_LONG).show();
+                                                // 취소
                                             }
                                         });
                                 builder.setCancelable(false); // 다이얼로그 외부 터치 금지
@@ -208,10 +212,61 @@ public class WatchListActivity extends AppCompatActivity {
                     }
                 }
                 // 세번째 인자의 값을 통해 리사이클러뷰 어댑터에서 다른 레이아웃을 사용하도록 한다
-                chatLatestAdapter = new RecyclerChatRoomAdapter(myChatSnapShotList, uid);
-                chatMyChatRecyclerview.setAdapter(chatLatestAdapter);
+                chatMyChatAdapter = new RecyclerChatRoomAdapter(myChatSnapShotList, uid);
+                chatMyChatRecyclerview.setAdapter(chatMyChatAdapter);
                 LinearLayoutManager chatThumbLayoutManager = new LinearLayoutManager(WatchListActivity.this);
                 chatMyChatRecyclerview.setLayoutManager(chatThumbLayoutManager);
+
+                // 내 채팅목록 아이템 스와이프 구현
+                myChatItemTouchHelper = new WatchItemTouchHelper(1, getApplicationContext(), new WatchItemAction() {
+                    @Override
+                    public void onRightClicked(final int position) {
+                        super.onRightClicked(position);
+
+                        // 제거여부를 확인하는 다이얼로그 생성
+                        AlertDialog.Builder builder = new AlertDialog.Builder(WatchListActivity.this);
+                        //builder.setTitle("AlertDialog Title");
+                        builder.setMessage("채팅방을 삭제하시겠습니까?");
+                        builder.setPositiveButton("예",
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        // DB chats 경로에서 채팅방이 삭제된 상태임을 나타내는 데이터를 추가한다
+                                        // 실제로 삭제하는 것은 아니고, 삭제된것으로 여기도록 한다
+                                        DataSnapshot getChatData = chatMyChatAdapter.filteredList.get(position);
+                                        String chatUniqueKey = getChatData.getKey();
+                                        // todo : 이전에 작성한 코드에 채팅방 삭제여부를 확인하는 분기 코드를 일일히 작성해주어야한다
+                                        Map<String, Object> chatStateDelete = new HashMap<>();
+                                        chatStateDelete.put("deleteAt", System.currentTimeMillis());
+                                        rootReference.child("chats").child(chatUniqueKey).updateChildren(chatStateDelete);
+
+                                        // 리사이클러뷰에서 해당 아이템을 제거하여 유저입장에서 아이템이 즉시 사라지도록 구현
+                                        chatMyChatAdapter.filteredList.remove(position);
+                                        chatMyChatAdapter.notifyItemRemoved(position);
+                                        chatMyChatAdapter.notifyItemRangeChanged(position, chatMyChatAdapter.getItemCount());
+                                    }
+                                });
+                        builder.setNegativeButton("아니오",
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        // 취소
+                                    }
+                                });
+                        builder.setCancelable(false); // 다이얼로그 외부 터치 금지
+                        builder.show();
+                    }
+                });
+
+                ItemTouchHelper itemTouchHelper = new ItemTouchHelper(myChatItemTouchHelper);
+                itemTouchHelper.attachToRecyclerView(chatMyChatRecyclerview);
+
+                // 리사이클러뷰의 아이템마다 스와이프시 나타나는 버튼을 그리는 메소드
+                chatMyChatRecyclerview.addItemDecoration(new RecyclerView.ItemDecoration() {
+                    @Override
+                    public void onDraw(@NonNull Canvas c, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
+                        super.onDraw(c, parent, state);
+                        myChatItemTouchHelper.onDraw(c);
+                    }
+                });
             }
 
             @Override
