@@ -120,7 +120,7 @@ public class WatchListActivity extends AppCompatActivity {
                                 }
                             }
                         }
-                        chatWatchListAdaptor = new RecyclerChatRoomAdapter(watchChatSnapShotList, uid, 0);
+                        chatWatchListAdaptor = new RecyclerChatRoomAdapter(watchChatSnapShotList, uid, SELECT_WATCH_LAYOUT);
                         chatWatchListRecyclerview.setAdapter(chatWatchListAdaptor);
                         LinearLayoutManager chatThumbLayoutManager = new LinearLayoutManager(WatchListActivity.this);
                         chatWatchListRecyclerview.setLayoutManager(chatThumbLayoutManager);
@@ -157,7 +157,6 @@ public class WatchListActivity extends AppCompatActivity {
                                                 String chatUniqueKey = getChatData.getKey();
                                                 // 채팅방 unique key 와 유저 uid 를 통해 DB에 접근하여 값을 좋아요 여부를 삭제한다
                                                 rootReference.child("thumb").child(chatUniqueKey).child(uid).setValue(null);
-                                                // todo chats 의 좋아요 수 직접 하나 빼거나 새로 계산하여 적용해야한다
 
                                                 chatWatchListAdaptor.filteredList.remove(position);
                                                 chatWatchListAdaptor.notifyItemRemoved(position);
@@ -221,7 +220,7 @@ public class WatchListActivity extends AppCompatActivity {
                     }
                 }
                 // 세번째 인자의 값을 통해 리사이클러뷰 어댑터에서 다른 레이아웃을 사용하도록 한다
-                chatMyChatAdapter = new RecyclerChatRoomAdapter(myChatSnapShotList, uid);
+                chatMyChatAdapter = new RecyclerChatRoomAdapter(myChatSnapShotList, uid, SELECT_WATCH_LAYOUT);
                 chatMyChatRecyclerview.setAdapter(chatMyChatAdapter);
                 LinearLayoutManager chatThumbLayoutManager = new LinearLayoutManager(WatchListActivity.this);
                 chatMyChatRecyclerview.setLayoutManager(chatThumbLayoutManager);

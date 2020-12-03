@@ -93,6 +93,8 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
     // 아이템 뷰를 저장하는 뷰홀더 클래스
     public class ViewHolder extends RecyclerView.ViewHolder {
         TextView chatViewTitle;
+        TextView chatViewName;
+        TextView chatViewMessage;
         TextView chatViewCurrentCount;
         TextView chatViewPersonnel;
         TextView chatThumbCount;
@@ -134,10 +136,13 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
                     });
                     break;
                 case 1:
-                    name = itemView.findViewById(R.id.name);
-
+                    chatViewTitle = itemView.findViewById(R.id.chatViewTitle);
+                    chatViewName = itemView.findViewById(R.id.chatViewName);
+                    chatViewMessage = itemView.findViewById(R.id.chatViewMessage);
+                    chatViewCurrentCount = itemView.findViewById(R.id.chatViewCurrentCount);
+                    chatViewPersonnel = itemView.findViewById(R.id.chatViewPersonnel);
                     break;
-                    default:
+                default:
                     break;
             }
         }
@@ -152,7 +157,7 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         // 상황에따라 사용할 레이아웃을 리스트에 저장
-        List<Integer> selectLayoutList = Arrays.asList(R.layout.chat_room_list_item, R.layout.chat_thumb_list_item);
+        List<Integer> selectLayoutList = Arrays.asList(R.layout.chat_room_list_item, R.layout.chat_watch_list_item);
 
         // selectLayout (레이아웃 선택) 값에 따라 다른 레이아웃을 아이템에서 사용할 수 있도록 한다
         View view = inflater.inflate(selectLayoutList.get(selectLayout), parent,false);
@@ -167,22 +172,42 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
         // 데이터베이스 chats 의 key 값과 같은 key 값을 공유하는 다른 데이터베이스에 접근하기위해서
         String databaseKey = chatDataSnapShot.getKey();
 
+        // key 값을 통해 참가 인원을 저장하는 members 에 접근하여 현재 참가중인 인원을 구한다
+        rootReference.child("members").child(databaseKey).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                int currentUserCount = (int) snapshot.getChildrenCount();
+                holder.chatViewCurrentCount.setText(currentUserCount + "");
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+        // 데이터 뷰에 적용하기
+        Chat chat = chatDataSnapShot.getValue(Chat.class);
+        String title = chat.getTitle();
+        int personnel = chat.getPersonnel();
+        int thumb = chat.getThumb();
+
 
         switch(selectLayout){
             case 0:
-                // key 값을 통해 참가 인원을 저장하는 members 에 접근하여 현재 참가중인 인원을 구한다
-                rootReference.child("members").child(databaseKey).addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        int currentUserCount = (int) snapshot.getChildrenCount();
-                        holder.chatViewCurrentCount.setText(currentUserCount + "");
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-
-                    }
-                });
+//                // key 값을 통해 참가 인원을 저장하는 members 에 접근하여 현재 참가중인 인원을 구한다
+//                rootReference.child("members").child(databaseKey).addListenerForSingleValueEvent(new ValueEventListener() {
+//                    @Override
+//                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+//                        int currentUserCount = (int) snapshot.getChildrenCount();
+//                        holder.chatViewCurrentCount.setText(currentUserCount + "");
+//                    }
+//
+//                    @Override
+//                    public void onCancelled(@NonNull DatabaseError error) {
+//
+//                    }
+//                });
 
                 // 좋아요 여부를 저장하는 thumb 에 접근하여 현재 유저가 해당 채팅방을 좋아요 했는지 확인한다
                 rootReference.child("thumb").child(databaseKey).child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -200,11 +225,11 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
                     }
                 });
 
-                // 데이터 뷰에 적용하기
-                Chat chat = chatDataSnapShot.getValue(Chat.class);
-                String title = chat.getTitle();
-                int personnel = chat.getPersonnel();
-                int thumb = chat.getThumb();
+//                // 데이터 뷰에 적용하기
+//                Chat chat = chatDataSnapShot.getValue(Chat.class);
+//                String title = chat.getTitle();
+//                int personnel = chat.getPersonnel();
+//                int thumb = chat.getThumb();
                 holder.chatViewTitle.setText(title);
                 holder.chatViewPersonnel.setText((personnel + ""));
                 holder.chatThumbCount.setText(thumb + "");
@@ -214,7 +239,10 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
                 holder.toChatActivityIntent.putExtra("ChatKey", chatDataSnapShot.getKey());
                 break;
             case 1:
-                holder.name.setText("안녕하시오");
+                holder.chatViewTitle.setText(title);
+                holder.chatViewPersonnel.setText((personnel + ""));
+                holder.chatViewName.setText("이름");/////////
+                holder.chatViewMessage.setText("이러쿵저렁쿠얼얼얼어렁렁러어렁렁");/////////
                 break;
             default:
                 break;
