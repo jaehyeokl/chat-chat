@@ -111,9 +111,13 @@ public class WatchListActivity extends AppCompatActivity {
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
 
                         for (DataSnapshot dataSnapshot: snapshot.getChildren()) {
-                            String chatKey = dataSnapshot.getKey();
-                            if (thumbUserChatKeyList.contains(chatKey)) {
-                                watchChatSnapShotList.add(dataSnapshot);
+                            if (!dataSnapshot.hasChild("deleteAt")) {
+                                // 삭제된 데이터는 제외한다 (삭제된 채팅데이터만 deleteAt 값이 존재)
+
+                                String chatKey = dataSnapshot.getKey();
+                                if (thumbUserChatKeyList.contains(chatKey)) {
+                                    watchChatSnapShotList.add(dataSnapshot);
+                                }
                             }
                         }
                         chatWatchListAdaptor = new RecyclerChatRoomAdapter(watchChatSnapShotList, uid, 0);
@@ -204,11 +208,16 @@ public class WatchListActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 for (DataSnapshot chatSnapShot: snapshot.getChildren()) {
-                    Chat chat = chatSnapShot.getValue(Chat.class);
-                    String masterUid = chat.getMasterUid();
-                    // chats 데이터베이스에서 채팅개설자의 uid (masterUid) 가 현재 로그인한 uid 와 같을때 리스트에 저장
-                    if (masterUid.equals(uid)) {
-                        myChatSnapShotList.add(chatSnapShot);
+
+                    if (!chatSnapShot.hasChild("deleteAt")) {
+                        // 삭제된 데이터는 제외한다 (삭제된 채팅데이터만 deleteAt 값이 존재)
+
+                        Chat chat = chatSnapShot.getValue(Chat.class);
+                        String masterUid = chat.getMasterUid();
+                        // chats 데이터베이스에서 채팅개설자의 uid (masterUid) 가 현재 로그인한 uid 와 같을때 리스트에 저장
+                        if (masterUid.equals(uid)) {
+                            myChatSnapShotList.add(chatSnapShot);
+                        }
                     }
                 }
                 // 세번째 인자의 값을 통해 리사이클러뷰 어댑터에서 다른 레이아웃을 사용하도록 한다

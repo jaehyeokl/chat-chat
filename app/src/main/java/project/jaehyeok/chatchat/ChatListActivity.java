@@ -113,8 +113,12 @@ public class ChatListActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 for (DataSnapshot chatSnapShot: snapshot.getChildren()) {
-                    chatDataSnapShotByThumb.add(chatSnapShot);
-                    chatDataSnapShotByLatest.add(chatSnapShot);
+
+                    if (!chatSnapShot.hasChild("deleteAt")) {
+                        // 삭제된 데이터는 제외한다 (삭제된 채팅데이터만 deleteAt 값이 존재)
+                        chatDataSnapShotByThumb.add(chatSnapShot);
+                        chatDataSnapShotByLatest.add(chatSnapShot);
+                    }
                 }
 
                 // 리스트를 각각 좋아요순, 최신순으로 정렬한다
