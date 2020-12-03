@@ -141,11 +141,19 @@ public class WatchListActivity extends AppCompatActivity {
                                 builder.setPositiveButton("예",
                                         new DialogInterface.OnClickListener() {
                                             public void onClick(DialogInterface dialog, int which) {
-                                                // 리사이클러뷰 아이템에서 해당 목록을 제거
+                                                // DB 에서 해당 아이템 채팅방에 대한 좋아요 데이터를 제거한다
+                                                // 이후 리사이클러뷰에서 해당 아이템을 제거하여 유저입장에서 아이템이 즉시 사라지도록 구현
+
+                                                // 리사이클러뷰 어댑터의 데이터리스트에서 해당 포지션의 데이터를 가져온다 (firebase realtime database 의 DataSnapShot 객체)
+                                                // 데이터베이스에서 채팅방을 식별하는 unique key 값을 얻는다.
+                                                DataSnapshot getChatData = chatWatchListAdaptor.filteredList.get(position);
+                                                String chatUniqueKey = getChatData.getKey();
+                                                // 채팅방 unique key 와 유저 uid 를 통해 DB에 접근하여 값을 좋아요 여부를 삭제한다
+                                                rootReference.child("thumb").child(chatUniqueKey).child(uid).setValue(null);
+
                                                 chatWatchListAdaptor.filteredList.remove(position);
                                                 chatWatchListAdaptor.notifyItemRemoved(position);
                                                 chatWatchListAdaptor.notifyItemRangeChanged(position, chatWatchListAdaptor.getItemCount());
-                                                // DB 설정해야함
                                             }
                                         });
                                 builder.setNegativeButton("아니오",

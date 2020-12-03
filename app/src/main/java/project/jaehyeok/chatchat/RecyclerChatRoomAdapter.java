@@ -26,7 +26,7 @@ import java.util.List;
 import project.jaehyeok.chatchat.data.Chat;
 
 // ChatListActivity 에서 채팅방 목록에 대한 리사이클러뷰 어댑터 (세로)
-public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRoomAdapter.ViewHolder> implements Filterable, ItemTouchHelperAdapter  {
+public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRoomAdapter.ViewHolder> implements Filterable {
     private ArrayList<DataSnapshot> chatDataSnapShotList = null; // unfiltered
     private String uid;
 
@@ -88,16 +88,6 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
                 notifyDataSetChanged();
             }
         };
-    }
-
-    @Override
-    public void onItemMove(int fromPosition, int toPosition) {
-
-    }
-
-    @Override
-    public void onItemDismiss(int position) {
-
     }
 
     // 아이템 뷰를 저장하는 뷰홀더 클래스
@@ -229,8 +219,6 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
             default:
                 break;
         }
-
-
     }
 
     // 전체 데이터(아이템) 개수를 리턴
