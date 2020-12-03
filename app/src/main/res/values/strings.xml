@@ -9,4 +9,11 @@
 
     <string name="hello_first_fragment">Hello first fragment</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+
+    <string name="database_path_users">users</string>
+    <string name="database_path_chats">chats</string>
+    <string name="database_path_members">members</string>
+    <string name="database_path_thumb">thumb</string>
+    <string name="database_path_messages">message</string>
+    <string name="storage_path_profile_image">profile_image/</string>
 </resources>

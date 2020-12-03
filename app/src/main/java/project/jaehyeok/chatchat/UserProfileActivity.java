@@ -134,7 +134,7 @@ public class UserProfileActivity extends AppCompatActivity {
         });
 
         // storage 에서 유저 프로필사진 불러오기
-        storageReference.child("profile_image/" + uid).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+        storageReference.child(getString(R.string.storage_path_profile_image) + uid).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
             @Override
             public void onSuccess(Uri uri) {
                 // 이미지 로드 성공시
@@ -217,7 +217,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
                     // 파이어베이스 storage profile_image 폴더에 해당 유저의 uid 로 프로필 이미지를 저장한다
                     // 저장할때 uid 로 이름을 지정하여, 프로필 이미지 변경시에는 기존파일에 덮어씌우도록 한다
-                    StorageReference storageRef = storageReference.child("profile_image/" + uid);
+                    StorageReference storageRef = storageReference.child(getString(R.string.storage_path_profile_image) + uid);
                     UploadTask uploadTask = storageRef.putFile(imageUri);
 
                     uploadTask.addOnFailureListener(new OnFailureListener() {

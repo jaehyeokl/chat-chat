@@ -26,6 +26,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 public class RecyclerChatMessageAdapter extends RecyclerView.Adapter<RecyclerChatMessageAdapter.ViewHolder> {
     // 데이터
@@ -111,27 +112,28 @@ public class RecyclerChatMessageAdapter extends RecyclerView.Adapter<RecyclerCha
 //                    holder.chatUserName.setVisibility(View.GONE);
 //                }
 
-                // 일단 보류
+                // todo 연속된 작성자일때 이름 생략 보류
                 holder.chatUserName.setText(message.getShowName());
 
                 // 상대 프로필 이미지
-//                System.out.println("@@@@@@@@@@@@");
-//                storageReference.child("profile_image/" + getUid).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-//                    @Override
-//                    public void onSuccess(Uri uri) {
-//                        // 이미지 로드 성공시
-//                        Glide.with(holder.itemView.getContext())
-//                                .load(uri)
-//                                .circleCrop()
-//                                .into(holder.chatUserProfile);
-//                    }
-//                }).addOnFailureListener(new OnFailureListener() {
-//                    @Override
-//                    public void onFailure(@NonNull Exception exception) {
-//                        //이미지 로드 실패시
-//                        // Toast.makeText(holder.itemView.getContext(), "실패", Toast.LENGTH_SHORT).show();
-//                    }
-//                });
+                // todo 채팅방 메세지 프로필사진 불러오기 보류
+                /* storageReference.child(R.string.storage_path_profile_image + getUid).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                    @Override
+                    public void onSuccess(Uri uri) {
+                        // 이미지 로드 성공시
+                        System.out.println("@@@@@@@@@@@@@");
+                        Glide.with(holder.itemView.getContext())
+                                .load(uri)
+                                .circleCrop()
+                                .into(holder.chatUserProfile);
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        //이미지 로드 실패시
+                         Toast.makeText(holder.itemView.getContext(), "실패", Toast.LENGTH_SHORT).show();
+                    }
+                }); */
             }
         } else {
             // 전체메세지일때

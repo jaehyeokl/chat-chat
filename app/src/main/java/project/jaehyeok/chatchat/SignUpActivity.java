@@ -112,26 +112,4 @@ public class SignUpActivity extends AppCompatActivity {
                     }
                 });
     }
-
-    // 계정 확인 메일 보내기
-    // TODO: 11/19/2020 인증 이메일을 보내기는 하지만, 이메일 확인과는 별개로 로그인이 바로 가능하다
-//    private void verificationEmail() {
-//        FirebaseUser user = firebaseAuth.getCurrentUser();
-//        user.sendEmailVerification()
-//                .addOnCompleteListener(new OnCompleteListener<Void>() {
-//                    @Override
-//                    public void onComplete(@NonNull Task<Void> task) {
-//                        if (task.isSuccessful()) {
-//                            Log.d("메일전송", "메일전송");
-//
-//                            // 계정 생성완료
-//                            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-//                            // 로그인화면으로 이동 후 이전화면(회원가입)으로 돌아오지 않도록 한다
-//                            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-//                            startActivity(intent);
-//                            Toast.makeText(SignUpActivity.this, "가입완료", Toast.LENGTH_SHORT).show();
-//                        }
-//                    }
-//                });
-//    }
 }

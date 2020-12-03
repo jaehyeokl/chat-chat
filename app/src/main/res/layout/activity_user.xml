@@ -57,9 +57,9 @@
         android:layout_height="80dp"
         android:layout_marginStart="50dp"
         android:layout_marginTop="20dp"
+        android:background="@drawable/profile_image_default"
         app:layout_constraintStart_toStartOf="@+id/userProfileTitle"
-        app:layout_constraintTop_toBottomOf="@+id/userProfileTitle"
-        tools:srcCompat="@drawable/profile_image_default" />
+        app:layout_constraintTop_toBottomOf="@+id/userProfileTitle" />
 
     <TextView
         android:id="@+id/userProfileName"
