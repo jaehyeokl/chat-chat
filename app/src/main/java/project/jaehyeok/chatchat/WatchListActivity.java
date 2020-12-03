@@ -1,12 +1,14 @@
 package project.jaehyeok.chatchat;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Canvas;
@@ -111,32 +113,57 @@ public class WatchListActivity extends AppCompatActivity {
                                 watchChatSnapShotList.add(dataSnapshot);
                             }
                         }
-                        chatWatchListAdaptor = new RecyclerChatRoomAdapter(watchChatSnapShotList, uid, SELECT_WATCH_LAYOUT);
+                        chatWatchListAdaptor = new RecyclerChatRoomAdapter(watchChatSnapShotList, uid, 0);
                         chatWatchListRecyclerview.setAdapter(chatWatchListAdaptor);
                         LinearLayoutManager chatThumbLayoutManager = new LinearLayoutManager(WatchListActivity.this);
                         chatWatchListRecyclerview.setLayoutManager(chatThumbLayoutManager);
 
-//                        ItemTouchHelper.Callback callback = new ThumbChatItemTouchHelper(chatWatchListAdaptor);
-//                        ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
-//                        touchHelper.attachToRecyclerView(chatWatchListRecyclerview);
-                        thumbChatItemTouchHelper = new ThumbChatItemTouchHelper(new ThumbChatItemAction() {
+                        // 관심 채팅목록의 아이템에대한 스와이프기능 설정
+                        // 터치 감지 이벤트를 활용하는 ItemTouchHelper 메소드를 이용해 관심 목록에서의 스와이프 기능을 정의하여 사용한다
+                        // (ThumbChatItemTouchHelper.java 에서 정의됨)
+                        thumbChatItemTouchHelper = new ThumbChatItemTouchHelper(getApplicationContext(), new ThumbChatItemAction() {
                             @Override
                             public void onLeftClicked(int position) {
                                 super.onLeftClicked(position);
-                                Toast.makeText(WatchListActivity.this, "왼쪽", Toast.LENGTH_SHORT).show();
-
+                                //Toast.makeText(WatchListActivity.this, "왼쪽", Toast.LENGTH_SHORT).show();
+                                //System.out.println("왼쪽");
+                                //알림 여부
                             }
 
                             @Override
-                            public void onRightClicked(int position) {
+                            public void onRightClicked(final int position) {
                                 super.onRightClicked(position);
-                                Toast.makeText(WatchListActivity.this, "오른쪽", Toast.LENGTH_SHORT).show();
+
+                                // 제거여부를 확인하는 다이얼로그 생성
+                                AlertDialog.Builder builder = new AlertDialog.Builder(WatchListActivity.this);
+                                //builder.setTitle("AlertDialog Title");
+                                builder.setMessage("관심 목록에서 제거하시겠습니까?");
+                                builder.setPositiveButton("예",
+                                        new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                // 리사이클러뷰 아이템에서 해당 목록을 제거
+                                                chatWatchListAdaptor.filteredList.remove(position);
+                                                chatWatchListAdaptor.notifyItemRemoved(position);
+                                                chatWatchListAdaptor.notifyItemRangeChanged(position, chatWatchListAdaptor.getItemCount());
+                                                // DB 설정해야함
+                                            }
+                                        });
+                                builder.setNegativeButton("아니오",
+                                        new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                //Toast.makeText(getApplicationContext(),"아니오를 선택했습니다.",Toast.LENGTH_LONG).show();
+                                            }
+                                        });
+                                builder.setCancelable(false); // 다이얼로그 외부 터치 금지
+                                builder.show();
                             }
                         });
+                        // 직접 정의한 스와이프에 대한 추가 기능을(thumbChatItemTouchHelper)
+                        // ItemTouchHelper 객체로 생성, 이후 리사이클러뷰와 연결한다
+                        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(thumbChatItemTouchHelper);
+                        itemTouchHelper.attachToRecyclerView(chatWatchListRecyclerview);
 
-                        ItemTouchHelper.Callback callback = new ThumbChatItemTouchHelper(chatWatchListAdaptor);
-                        final ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
-                        touchHelper.attachToRecyclerView(chatWatchListRecyclerview);
+                        // 리사이클러뷰의 아이템마다 스와이프시 나타나는 버튼을 그리는 메소드
                         chatWatchListRecyclerview.addItemDecoration(new RecyclerView.ItemDecoration() {
                             @Override
                             public void onDraw(@NonNull Canvas c, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {

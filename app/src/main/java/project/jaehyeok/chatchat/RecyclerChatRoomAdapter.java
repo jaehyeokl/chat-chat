@@ -30,7 +30,7 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
     private ArrayList<DataSnapshot> chatDataSnapShotList = null; // unfiltered
     private String uid;
 
-    private ArrayList<DataSnapshot> filteredList;
+    public ArrayList<DataSnapshot> filteredList;
 
     // 유저가 좋아요한 채팅목록을 보는 리사이클러뷰에서 해당 어댑터를 사용할때는 다른 xml 레이아웃을 사용한다.
     // 이를 식별하기 위한 변수 (default 0  채팅리스트일때 / 1 좋아요한 채팅 목록일때)
