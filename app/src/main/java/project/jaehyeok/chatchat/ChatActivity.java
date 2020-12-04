@@ -251,6 +251,12 @@ public class ChatActivity extends AppCompatActivity {
                             messagesReference.child(databaseChatKey).push().setValue(chatMessage);
 
                             inputChatMessage.setText(null);
+
+                            // 메세지를 전송하면 채팅방의 마지막 메세지 데이터에 같은 내용을 한번 더 저장한다
+                            Map<String, Object> latestMessage = new HashMap<>();
+                            latestMessage.put("latestSender", userName);
+                            latestMessage.put("latestMessage", inputMessage);
+                            rootReference.child("chats").child(databaseChatKey).updateChildren(latestMessage);
                         }
 
                         @Override
