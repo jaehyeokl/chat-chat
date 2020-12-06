@@ -126,7 +126,7 @@ public class WatchListActivity extends AppCompatActivity {
                         chatWatchListRecyclerview.setLayoutManager(chatThumbLayoutManager);
 
                         // 목록의 아이템에 추가되는 메세지를 실시간으로 표기하기 위한 메소드
-                        notifyLatestMessage(watchChatSnapShotList);
+                        notifyLatestMessage(watchChatSnapShotList, true);
 
                         // 관심 채팅목록의 아이템에대한 스와이프기능 설정
                         // 터치 감지 이벤트를 활용하는 ItemTouchHelper 메소드를 이용해 관심 목록에서의 스와이프 기능을 정의하여 사용한다
@@ -228,6 +228,9 @@ public class WatchListActivity extends AppCompatActivity {
                 LinearLayoutManager chatThumbLayoutManager = new LinearLayoutManager(WatchListActivity.this);
                 chatMyChatRecyclerview.setLayoutManager(chatThumbLayoutManager);
 
+                // 목록의 아이템에 추가되는 메세지를 실시간으로 표기하기 위한 메소드
+                notifyLatestMessage(myChatSnapShotList, false);
+
                 // 내 채팅목록 아이템 스와이프 구현
                 myChatItemTouchHelper = new WatchItemTouchHelper(1, getApplicationContext(), new WatchItemAction() {
                     @Override
@@ -315,8 +318,32 @@ public class WatchListActivity extends AppCompatActivity {
     }
 
     // 채팅방에 추가되는 메세지를 실시간으로 반영하는 메소드
-    private void notifyLatestMessage(ArrayList<DataSnapshot> watchChatSnapShotList) {
-        // 순서를 이용하여 특정 아이템에
+    private void notifyLatestMessage(ArrayList<DataSnapshot> watchChatSnapShotList, final boolean isWatchList) {
+        // 데이터베이스 chats 데이터의 변화를 감지한다 (addValueEventListener)
+        // 마지막 메세지가 추가될 때마다 변화를 감지하여 해당 아이템만 새로고침한다
+        for (int i = 0; i < watchChatSnapShotList.size(); i++) {
+            DataSnapshot dataSnapshot = watchChatSnapShotList.get(i);
+            String chatKey = dataSnapshot.getKey();
+
+            // 데이터 변화를 지속적으로 받는 리스너를 통해 실시간 채팅의 변화를 감지한다
+            final int chatIndex = i;
+            rootReference.child("chats").child(chatKey).addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    // 두번째 인자는 true 일때 좋아요리스트, false 일때 개설한 채팅리스트이다
+                    if (isWatchList) {
+                        chatWatchListAdaptor.notifyItemChanged(chatIndex);
+                    } else {
+                        chatMyChatAdapter.notifyItemChanged(chatIndex);
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            });
+        }
     }
 
     @Override
