@@ -125,6 +125,9 @@ public class WatchListActivity extends AppCompatActivity {
                         LinearLayoutManager chatThumbLayoutManager = new LinearLayoutManager(WatchListActivity.this);
                         chatWatchListRecyclerview.setLayoutManager(chatThumbLayoutManager);
 
+                        // 목록의 아이템에 추가되는 메세지를 실시간으로 표기하기 위한 메소드
+                        notifyLatestMessage(watchChatSnapShotList);
+
                         // 관심 채팅목록의 아이템에대한 스와이프기능 설정
                         // 터치 감지 이벤트를 활용하는 ItemTouchHelper 메소드를 이용해 관심 목록에서의 스와이프 기능을 정의하여 사용한다
                         // (ThumbChatItemTouchHelper.java 에서 정의됨)
@@ -242,7 +245,7 @@ public class WatchListActivity extends AppCompatActivity {
                                         // 실제로 삭제하는 것은 아니고, 삭제된것으로 여기도록 한다
                                         DataSnapshot getChatData = chatMyChatAdapter.filteredList.get(position);
                                         String chatUniqueKey = getChatData.getKey();
-                                        // todo : 이전에 작성한 코드에 채팅방 삭제여부를 확인하는 분기 코드를 일일히 작성해주어야한다
+
                                         Map<String, Object> chatStateDelete = new HashMap<>();
                                         chatStateDelete.put("deleteAt", System.currentTimeMillis());
                                         rootReference.child("chats").child(chatUniqueKey).updateChildren(chatStateDelete);
@@ -309,6 +312,11 @@ public class WatchListActivity extends AppCompatActivity {
                 return false;
             }
         });
+    }
+
+    // 채팅방에 추가되는 메세지를 실시간으로 반영하는 메소드
+    private void notifyLatestMessage(ArrayList<DataSnapshot> watchChatSnapShotList) {
+        // 순서를 이용하여 특정 아이템에
     }
 
     @Override

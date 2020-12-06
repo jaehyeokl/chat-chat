@@ -106,7 +106,6 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
         public ViewHolder(@NonNull final View itemView) {
             super(itemView);
 
-            //홈페이지에서 더 많은 컨텐츠를 확인하세요,  https://stickode.com/
             switch(selectLayout){
                 case 0:
                     chatViewTitle = itemView.findViewById(R.id.chatViewTitle);
@@ -114,26 +113,6 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
                     chatViewPersonnel = itemView.findViewById(R.id.chatViewPersonnel);
                     chatThumbCount = itemView.findViewById(R.id.chatThumbCount);
                     chatThumbButton = itemView.findViewById(R.id.chatThumbButton);
-
-                    // 클릭이벤트 밖에서 인텐트를 초기화하는 이유
-                    // ChatActivity 에 전달할 데이터를 추가하기 위해서 onBindViewHolder 메소드에서
-                    // Intent 객체를 참조할 수 있도록 한다
-                    toChatActivityIntent = new Intent(itemView.getContext(), ChatActivity.class);
-
-                    // 아이템 클릭이벤트를 액티비티(ChatListActivity)에서 처리
-                    itemView.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            // 리사이클러뷰 목록에서 아이템의 포지션
-                            int position = getAdapterPosition();
-                            if (position != RecyclerView.NO_POSITION) {
-                                // 채팅 목록의 아이템을 클릭했을때 채팅방으로 입장한다
-                                // onBindViewHolder 에서 Intent 에 데이터를 추가하였음
-                                view.getContext().startActivity(toChatActivityIntent);
-                                //Toast.makeText(view.getContext(), categoryPosition + "/" + position, Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    });
                     break;
                 case 1:
                     chatViewTitle = itemView.findViewById(R.id.chatViewTitle);
@@ -145,6 +124,26 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
                 default:
                     break;
             }
+
+            // 클릭이벤트 밖에서 인텐트를 초기화하는 이유
+            // ChatActivity 에 전달할 데이터를 추가하기 위해서 onBindViewHolder 메소드에서
+            // Intent 객체를 참조할 수 있도록 한다
+            toChatActivityIntent = new Intent(itemView.getContext(), ChatActivity.class);
+
+            // 아이템 클릭이벤트를 액티비티(ChatListActivity)에서 처리
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    // 리사이클러뷰 목록에서 아이템의 포지션
+                    int position = getAdapterPosition();
+                    if (position != RecyclerView.NO_POSITION) {
+                        // 채팅 목록의 아이템을 클릭했을때 채팅방으로 입장한다
+                        // onBindViewHolder 에서 Intent 에 데이터를 추가하였음
+                        view.getContext().startActivity(toChatActivityIntent);
+                        //Toast.makeText(view.getContext(), categoryPosition + "/" + position, Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
         }
     }
 
@@ -170,7 +169,7 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
     public void onBindViewHolder(@NonNull final RecyclerChatRoomAdapter.ViewHolder holder, int position) {
         DataSnapshot chatDataSnapShot = filteredList.get(position);
         // 데이터베이스 chats 의 key 값과 같은 key 값을 공유하는 다른 데이터베이스에 접근하기위해서
-        String databaseKey = chatDataSnapShot.getKey();
+        final String databaseKey = chatDataSnapShot.getKey();
 
         // key 값을 통해 참가 인원을 저장하는 members 에 접근하여 현재 참가중인 인원을 구한다
         rootReference.child("members").child(databaseKey).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -234,19 +233,38 @@ public class RecyclerChatRoomAdapter extends RecyclerView.Adapter<RecyclerChatRo
                 holder.chatViewPersonnel.setText((personnel + ""));
                 holder.chatThumbCount.setText(thumb + "");
 
-                // ChatActivity 에서 파이어베이스 데이터베이스에 저장된 메세지, 참가인원 데이터를 불러오기 위해서는
-                // 접근하기 위한 key 값이 필요하다. 이를 위해 chatDataSnapShot 에 저장된 key 값을 Intent 를 통해 전달한다
-                holder.toChatActivityIntent.putExtra("ChatKey", chatDataSnapShot.getKey());
+
                 break;
             case 1:
-                holder.chatViewTitle.setText(title);
-                holder.chatViewPersonnel.setText((personnel + ""));
-                holder.chatViewName.setText("이름");/////////
-                holder.chatViewMessage.setText("이러쿵저렁쿠얼얼얼어렁렁러어렁렁");/////////
+                rootReference.child("chats").addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        for (DataSnapshot dataSnapshot: snapshot.getChildren()) {
+                            // 채팅이 같을때
+                            if (dataSnapshot.getKey().equals(databaseKey)) {
+                                Chat chatData = dataSnapshot.getValue(Chat.class);
+                                holder.chatViewTitle.setText(chatData.getTitle());
+                                holder.chatViewPersonnel.setText((chatData.getPersonnel() + ""));
+                                holder.chatViewName.setText(chatData.getLatestSender());
+                                holder.chatViewMessage.setText(chatData.getLatestMessage());
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+
                 break;
             default:
                 break;
         }
+
+        // ChatActivity 에서 파이어베이스 데이터베이스에 저장된 메세지, 참가인원 데이터를 불러오기 위해서는
+        // 접근하기 위한 key 값이 필요하다. 이를 위해 chatDataSnapShot 에 저장된 key 값을 Intent 를 통해 전달한다
+        holder.toChatActivityIntent.putExtra("ChatKey", databaseKey);
     }
 
     // 전체 데이터(아이템) 개수를 리턴

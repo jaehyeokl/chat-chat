@@ -7,6 +7,8 @@ public class Chat {
     public int personnel;
     public int thumb;
     public long deleteAt;
+    public String latestMessage = "";
+    public String latestSender = "";
 
     public Chat() {
         // Default constructor required for calls to DataSnapshot.getValue
@@ -40,5 +42,13 @@ public class Chat {
 
     public long getDeleteAt() {
         return deleteAt;
+    }
+
+    public String getLatestMessage() {
+        return latestMessage;
+    }
+
+    public String getLatestSender() {
+        return latestSender;
     }
 }
