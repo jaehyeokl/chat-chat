@@ -6,6 +6,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.work.BackoffPolicy;
+import androidx.work.ExistingWorkPolicy;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
+import androidx.work.WorkRequest;
 
 import android.annotation.SuppressLint;
 import android.content.DialogInterface;
@@ -27,6 +33,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import project.jaehyeok.chatchat.data.Chat;
 
@@ -73,6 +80,26 @@ public class WatchListActivity extends AppCompatActivity {
         // 좋아요한 채팅목록, 내가 만든 채팅목록 리사이클러뷰 초기화
         chatWatchListRecyclerview = findViewById(R.id.chatWatchListRecyclerview);
         chatMyChatRecyclerview = findViewById(R.id.chatMyChatRecyclerview);
+
+        // 채팅 수신을 위한 WorkManager 구현
+        WorkRequest uploadWorkRequest = new OneTimeWorkRequest.Builder(NotifyMessageWorker.class)
+                .setBackoffCriteria(
+                        BackoffPolicy.EXPONENTIAL,
+                        OneTimeWorkRequest.MIN_BACKOFF_MILLIS,
+                        TimeUnit.MILLISECONDS)
+                .build();
+        WorkManager.getInstance(getApplicationContext())
+                .beginUniqueWork(
+                        "Name",
+                        ExistingWorkPolicy.REPLACE,
+                        (OneTimeWorkRequest) uploadWorkRequest
+                )
+                .enqueue();
+
+//        PeriodicWorkRequest saveRequest = new PeriodicWorkRequest.Builder(NotifyMessageWorker.class, 1, TimeUnit.HOURS)
+//                .build();
+//        WorkManager.getInstance(getApplicationContext())
+//                .enqueue(saveRequest);
     }
 
     @Override

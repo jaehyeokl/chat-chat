@@ -56,4 +56,7 @@ dependencies {
 //    implementation 'com.androidx.support:recyclerview-v7:26.1.0'
     //noinspection GradleCompatible
     implementation 'com.android.support:design:27.1.1'
+    // WorkManager
+    implementation "androidx.work:work-runtime:2.4.0"
+    implementation "androidx.work:work-gcm:2.4.0"
 }

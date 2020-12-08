@@ -256,6 +256,7 @@ public class ChatActivity extends AppCompatActivity {
                             Map<String, Object> latestMessage = new HashMap<>();
                             latestMessage.put("latestSender", userName);
                             latestMessage.put("latestMessage", inputMessage);
+                            latestMessage.put("latestUid", uid);
                             rootReference.child("chats").child(databaseChatKey).updateChildren(latestMessage);
                         }
 

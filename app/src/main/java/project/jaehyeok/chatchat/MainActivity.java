@@ -210,7 +210,7 @@ public class MainActivity extends AppCompatActivity {
         editor.commit();
 
         //스틱코드에 접속하여 생산성을 향상시켜 보세요, https://stickode.com/
-        System.out.println("@@@@@@@@@@@@@@@@@@@@@@ : " + uid);
+        //System.out.println("@@@@@@@@@@@@@@@@@@@@@@ : " + uid);
     }
 
     // 현재 로그인한 계정의 프로필을 리스트에 저장하여 반환한다
