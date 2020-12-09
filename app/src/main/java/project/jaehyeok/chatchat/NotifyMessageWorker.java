@@ -75,14 +75,17 @@ public class NotifyMessageWorker extends Worker {
 //        String uid = userProfile.get(0);
 
         // 앱이 실행중인지 확인
-        if (appInForeground(getApplicationContext())) {
-            System.out.println("################ 포그라운드");
-        } else {
-            System.out.println("################ 포그라운드 아님");
-        }
+//        if (appInForeground(getApplicationContext())) {
+//            System.out.println("################ 포그라운드");
+//        } else {
+//            System.out.println("################ 포그라운드 아님");
+//        }
 
 
         // SharedPreferences 에 저장된 uid 가져오기
+        // 어플리케이션이 종료됐을때 파이어베이스를 통해 로그인 여부를 확인할 수가 없어
+        // 로그인 시 SharedPreferences 에 저장되는 uid 를 사용한다
+        // todo 파이어베이스를 통해 어플이 종료됐을때도 로그인 여부를 확인할 수 있는 방법 알아보기
         SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("firebaseAuth", Context.MODE_PRIVATE);
         final String uid = sharedPreferences.getString("uid",null);
 
@@ -121,16 +124,18 @@ public class NotifyMessageWorker extends Worker {
                             // 본인이 작성한 메세지가 아닌것만 알림 실행
                             if (!senderUid.equals(uid)) {
 //                                    notificationMessage(chat);
+                                // 오레오 이후 버전부터는 백그라운드에서의 작업이 제한된다
+                                //
                                     setForegroundAsync(notificationMessage(chat));
-                                // 앱이 포그라운드인지 백그라운드인지 확인한다
-                                if (appInForeground(getApplicationContext())) {
-                                    System.out.println("################ 포그라운드");
-                                    //setForegroundAsync(notificationMessage(chat));
-
-                                } else {
-                                    System.out.println("################ 포그라운드 아님");
-                                    //setForegroundAsync(notificationMessage(chat));
-                                }
+                                // todo 포그라운드, 백그라운드 체크 후 작업 설정
+//                                if (appInForeground(getApplicationContext())) {
+//                                    System.out.println("################ 포그라운드");
+//                                    //setForegroundAsync(notificationMessage(chat));
+//
+//                                } else {
+//                                    System.out.println("################ 포그라운드 아님");
+//                                    //setForegroundAsync(notificationMessage(chat));
+//                                }
                             }
                         }
 
@@ -151,6 +156,7 @@ public class NotifyMessageWorker extends Worker {
         return Result.success();
     }
 
+    // 새로운 메세지의 내용을 포함한 알림을 생성한다
     private ForegroundInfo notificationMessage(Chat chat) {
         String title = chat.getTitle();
         String sender = chat.getLatestSender();
@@ -169,9 +175,10 @@ public class NotifyMessageWorker extends Worker {
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true);
 
+        // 오레오 이상 알림 설정 시 채널을 만들고 등록을 해야한다
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
-            builder.setSmallIcon(R.drawable.ic_launcher_foreground); //mipmap 사용시 Oreo 이상에서 시스템 UI 에러남
+            builder.setSmallIcon(R.drawable.ic_launcher_foreground);
             CharSequence channelName  = "testChannel";
             String description = "오레오 이상을 테스트 채널";
             int importance = NotificationManager.IMPORTANCE_HIGH;
@@ -183,7 +190,7 @@ public class NotifyMessageWorker extends Worker {
             assert notificationManager != null;
             notificationManager.createNotificationChannel(channel);
 
-        } else builder.setSmallIcon(R.mipmap.ic_launcher); // Oreo 이하에서 mipmap 사용하지 않으면 Couldn't create icon: StatusBarIcon 에러남
+        } else builder.setSmallIcon(R.mipmap.ic_launcher);
 
         assert notificationManager != null;
         notificationManager.notify(1234, builder.build()); // 고유숫자로 노티피케이션 동작시킴
@@ -191,6 +198,8 @@ public class NotifyMessageWorker extends Worker {
         return new ForegroundInfo(1,builder.build());
     }
 
+    // 채팅어플리케이션이 포그라운드, 백그라운드인지 확인한다
+    // 이를 활용하여 포그라운드일때는 백그라운드일때와 달리 다른 방식으로 메세지를 보여주기 위해 사용한다
     private boolean appInForeground(@NonNull Context context) {
         ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         List<ActivityManager.RunningAppProcessInfo> runningAppProcesses = activityManager.getRunningAppProcesses();

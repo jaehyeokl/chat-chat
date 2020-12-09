@@ -83,18 +83,18 @@ public class WatchListActivity extends AppCompatActivity {
 
         // 채팅 수신을 위한 WorkManager 구현
         WorkRequest uploadWorkRequest = new OneTimeWorkRequest.Builder(NotifyMessageWorker.class)
-                .setBackoffCriteria(
-                        BackoffPolicy.EXPONENTIAL,
-                        OneTimeWorkRequest.MIN_BACKOFF_MILLIS,
-                        TimeUnit.MILLISECONDS)
+//                .setBackoffCriteria(
+//                        BackoffPolicy.EXPONENTIAL,
+//                        OneTimeWorkRequest.MIN_BACKOFF_MILLIS,
+//                        TimeUnit.MILLISECONDS)
                 .build();
         WorkManager.getInstance(getApplicationContext())
-                .beginUniqueWork(
-                        "Name",
-                        ExistingWorkPolicy.REPLACE,
-                        (OneTimeWorkRequest) uploadWorkRequest
-                )
-                .enqueue();
+//                .beginUniqueWork(
+//                        "Name",
+//                        ExistingWorkPolicy.REPLACE,
+//                        (OneTimeWorkRequest) uploadWorkRequest
+//                )
+                .enqueue(uploadWorkRequest);
 
 //        PeriodicWorkRequest saveRequest = new PeriodicWorkRequest.Builder(NotifyMessageWorker.class, 1, TimeUnit.HOURS)
 //                .build();
@@ -106,8 +106,11 @@ public class WatchListActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
+        // todo onResume 에서 뭘 하려는지 알 수가 없다
+        // todo 먼저 그림을 보여주고 설명할 수 있도록 해야한다
+        // todo 처음에 뭔지 모르니까 뒤에것도 자연스럽게 이해할 수 없다
         // 좋아요한 채팅목록, 내가 만든 채팅 목록을 보여주기 위해
-        // 파이어베이스 데이터베이스에서 채팅데이터를 리스트에 후 리사이클러뷰의 어댑터에 전달한다
+        // 파이어베이스 데이터베이스에서 채팅데이터를 리스트의 리사이클러뷰의 어댑터에 전달한다
         // 해당 액티비티로 전환될 때 마다 추가된 데이터를 목록에 최신화하여 보여주기 위해 onResume 에서 구현
 
         // 좋아요한 채팅방 목록 구현하기
