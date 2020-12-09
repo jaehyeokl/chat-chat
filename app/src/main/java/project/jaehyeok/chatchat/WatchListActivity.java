@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.work.BackoffPolicy;
+import androidx.work.Data;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
@@ -81,7 +82,7 @@ public class WatchListActivity extends AppCompatActivity {
         chatWatchListRecyclerview = findViewById(R.id.chatWatchListRecyclerview);
         chatMyChatRecyclerview = findViewById(R.id.chatMyChatRecyclerview);
 
-        // 채팅 수신을 위한 WorkManager 구현
+//        // 채팅 수신을 위한 WorkManager 구현
         WorkRequest uploadWorkRequest = new OneTimeWorkRequest.Builder(NotifyMessageWorker.class)
 //                .setBackoffCriteria(
 //                        BackoffPolicy.EXPONENTIAL,
@@ -89,12 +90,12 @@ public class WatchListActivity extends AppCompatActivity {
 //                        TimeUnit.MILLISECONDS)
                 .build();
         WorkManager.getInstance(getApplicationContext())
-//                .beginUniqueWork(
-//                        "Name",
-//                        ExistingWorkPolicy.REPLACE,
-//                        (OneTimeWorkRequest) uploadWorkRequest
-//                )
-                .enqueue(uploadWorkRequest);
+                .beginUniqueWork(
+                        "notifyChatMessage",
+                        ExistingWorkPolicy.REPLACE,
+                        (OneTimeWorkRequest) uploadWorkRequest
+                )
+                .enqueue();
 
 //        PeriodicWorkRequest saveRequest = new PeriodicWorkRequest.Builder(NotifyMessageWorker.class, 1, TimeUnit.HOURS)
 //                .build();
@@ -165,9 +166,13 @@ public class WatchListActivity extends AppCompatActivity {
                             @Override
                             public void onLeftClicked(int position) {
                                 super.onLeftClicked(position);
-                                //Toast.makeText(WatchListActivity.this, "왼쪽", Toast.LENGTH_SHORT).show();
-                                //System.out.println("왼쪽");
-                                //알림 여부
+                                Toast.makeText(WatchListActivity.this, "왼쪽" + position, Toast.LENGTH_SHORT).show();
+                                // 버튼의 상태를 바꾸는것은 일단 방법이 생각나지 않는다,
+                                // 먼저 각 채팅방별로 알림 버튼 클릭시 현재 서비스의 유무를 판단하여 실행/취소 하는 것을 구현하자
+                                messageNotificationToggle(position);
+
+
+                                // 실시간데이터베이스에서 가장 첫 메세지(기존 메세지)는 반영되지 않도록 하는 방법 알아보기
                             }
 
                             @Override
@@ -374,6 +379,44 @@ public class WatchListActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+
+    // 유저가 특정 채팅방의 메세지 알림 수신여부를 선택할때 실행되는 메소드
+    // 수신 허용된 상태일때는 기존에 실행중인 서비스를 종료하고
+    // 수신 중이지 않을때(서비스가 존재하지 않을때)는 서비스를 실행한다
+    private void messageNotificationToggle(int position) {
+        // 서비스를 식별할 수 있는 고유한 이름 생성
+        // 전달받은 채팅방의 아이템 포지션 (position) 을 이용하여
+        // 데이터베이스에서 채팅방마다 가지고 있는 고유 식별값(key 값) 과
+        // 현재 로그인한 계정의 uid 를 이용하여 생성한다
+        DataSnapshot dataSnapshot = chatWatchListAdaptor.filteredList.get(position);
+        String chatUniqueKey = dataSnapshot.getKey();
+        String serviceName = uid + "_" + chatUniqueKey;
+
+        Data.Builder builder = new Data.Builder()
+                .putString("chatUniqueKey", chatUniqueKey)
+                .putString("uid", uid);
+        Data data = builder.build();
+
+        // 채팅 수신을 위한 WorkManager 구현
+        WorkRequest uploadWorkRequest = new OneTimeWorkRequest.Builder(NotifyMessageWorker.class)
+                .setInputData(data)
+//                .setBackoffCriteria(
+//                        BackoffPolicy.EXPONENTIAL,
+//                        OneTimeWorkRequest.MIN_BACKOFF_MILLIS,
+//                        TimeUnit.MILLISECONDS)
+                .build();
+
+        uploadWorkRequest.getId();
+
+        WorkManager.getInstance(getApplicationContext())
+                .beginUniqueWork(
+                        "notifyChatMessage",
+                        ExistingWorkPolicy.REPLACE,
+                        (OneTimeWorkRequest) uploadWorkRequest
+                )
+                .enqueue();
+
     }
 
     @Override

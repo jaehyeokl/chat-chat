@@ -18,6 +18,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.work.Data;
 import androidx.work.ForegroundInfo;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
@@ -82,6 +83,44 @@ public class NotifyMessageWorker extends Worker {
 //        }
 
 
+        // WorkRequest 생성 시 setInputData 를 통하여 전달한 Data
+        // 메세지 수신을 요청한 계정의 uid, 수신할 채팅방의 데이터베이스 unique key 값을 전달받는다
+        Data data = getInputData();
+        String chatUniqueKey = data.getString("chatUniqueKey");
+        final String getUid = data.getString("uid");
+
+//        // 채팅방에 업로드되는
+//        rootReference.child("chats").child(chatUniqueKey).addValueEventListener(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot snapshot) {
+//                Chat chat = snapshot.getValue(Chat.class);
+//                String senderUid = chat.getLatestUid();
+//
+//                // SharedPreferences 에 저장된 uid, 가장 최근에 로그인한 계정을 나타낸다
+//                // onDataChange 안에
+//                SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("firebaseAuth", Context.MODE_PRIVATE);
+//                String uid = sharedPreferences.getString("uid",null);
+//
+//                if (getUid.equals(uid)) {
+//                    //
+//                }
+//
+//                // 본인이 작성한 메세지가 아닌것만 알림 실행
+//                if (!senderUid.equals(uid)) {
+////                                    notificationMessage(chat);
+//                    // 오레오 이후 버전부터는 백그라운드에서의 작업이 제한된다
+//                    //
+//                    setForegroundAsync(notificationMessage(chat));
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError error) {
+//
+//            }
+//        });
+
+
         // SharedPreferences 에 저장된 uid 가져오기
         // 어플리케이션이 종료됐을때 파이어베이스를 통해 로그인 여부를 확인할 수가 없어
         // 로그인 시 SharedPreferences 에 저장되는 uid 를 사용한다
@@ -93,7 +132,7 @@ public class NotifyMessageWorker extends Worker {
         // 이후 경로 chats 에서 해당 채팅방의 데이터 변화를 감지하는 리스너 실행
 
         final String finalUid = uid;
-        rootReference.child("thumb").addListenerForSingleValueEvent(new ValueEventListener() {
+        rootReference.child("thumb").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 // 각 채팅방의 좋아요 유저를 저장하는 데이터베이스에서
