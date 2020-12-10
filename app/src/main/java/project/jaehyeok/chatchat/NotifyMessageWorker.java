@@ -57,31 +57,11 @@ public class NotifyMessageWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        firebaseAuth = FirebaseAuth.getInstance();
         firebaseDatabase = FirebaseDatabase.getInstance();
         rootReference = firebaseDatabase.getReference();
 
-//        // 현재 로그인 계정의 uid 얻기
-//        FirebaseUser user = firebaseAuth.getCurrentUser();
-//        ArrayList<String> userProfile = new ArrayList<>();
-//        if (user != null) {
-//            for (UserInfo profile : user.getProviderData()) {
-//                // UID 각 계정마다 부여되는 고유 값
-//                userProfile.add(profile.getUid());
-//            }
-//        } else {
-//            notificationMessage(null);
-//            System.out.println("로그인 되어있지 않다");
-//        }
-//        String uid = userProfile.get(0);
-
-        // 앱이 실행중인지 확인
-//        if (appInForeground(getApplicationContext())) {
-//            System.out.println("################ 포그라운드");
-//        } else {
-//            System.out.println("################ 포그라운드 아님");
-//        }
-
+        // todo 파이어베이스를 통해 어플이 종료됐을때도 로그인 여부를 확인할 수 있는 방법 알아보기
+        firebaseAuth = FirebaseAuth.getInstance();
 
         // WorkRequest 생성 시 setInputData 를 통하여 전달한 Data
         // 메세지 수신을 요청한 계정의 uid, 수신할 채팅방의 데이터베이스 unique key 값을 전달받는다
@@ -113,9 +93,12 @@ public class NotifyMessageWorker extends Worker {
 
                         // 본인이 작성한 메세지는 알림에서 제외한다
                         if (!senderUid.equals(getUid)) {
+
+                            // 어플리케이션이 포그라운드, 백그라운드 상태인지 확인하여
+                            // 각 상태마다 다르게 메세지를 유저에게 보여줄 수 있도록 한다
                             if (appInForeground(getApplicationContext())) {
                                 // 채팅 어플리케이션이 포그라운드(화면에서 실행중)일 때
-                                System.out.println("################ 포그라운드");
+                                // 토스트 메세지를 통해 간단하게 전달한다
                                 String title = chat.getTitle();
                                 String sender = chat.getLatestSender();
                                 String message = chat.getLatestMessage();
@@ -140,82 +123,87 @@ public class NotifyMessageWorker extends Worker {
             }
         });
 
-
-//        // SharedPreferences 에 저장된 uid 가져오기
-//        // 어플리케이션이 종료됐을때 파이어베이스를 통해 로그인 여부를 확인할 수가 없어
-//        // 로그인 시 SharedPreferences 에 저장되는 uid 를 사용한다
-//        // todo 파이어베이스를 통해 어플이 종료됐을때도 로그인 여부를 확인할 수 있는 방법 알아보기
-//        SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("firebaseAuth", Context.MODE_PRIVATE);
-//        final String uid = sharedPreferences.getString("uid",null);
+        // 기존 전체 채팅방의 메세지 수신 리스너를 실행시키는 코드
+        // 현재는 각 채팅방 별로 리스너를 실행시키는 것으로 대체
+        /*
+        // SharedPreferences 에 저장된 uid 가져오기
+        // 어플리케이션이 종료됐을때 파이어베이스를 통해 로그인 여부를 확인할 수가 없어
+        // 로그인 시 SharedPreferences 에 저장되는 uid 를 사용한다
+        SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("firebaseAuth", Context.MODE_PRIVATE);
+        final String uid = sharedPreferences.getString("uid",null);
 
         // 데이터베이스 경로 thumb 에서 현재 로그인한 계정이 좋아요한 채팅방 unique key 저장
         // 이후 경로 chats 에서 해당 채팅방의 데이터 변화를 감지하는 리스너 실행
 
-//        final String finalUid = uid;
-//        rootReference.child("thumb").addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot snapshot) {
-//                // 각 채팅방의 좋아요 유저를 저장하는 데이터베이스에서
-//                // 현재 로그인한 유저가 좋아요 한 채팅방의 unique key 값을 리스트에 저장한다
-//                ArrayList<String> thumbUserChatKeyList = new ArrayList<>();
-//                for (DataSnapshot dataSnapshot: snapshot.getChildren()) {
-//                    // 한 채팅방의 좋아요 한 유저를 저장하는 map
-//                    Map<String, Object> getThumbUser = (Map<String, Object>) dataSnapshot.getValue();
-//                    // 좋아요한 유저의 uid 만 저장한 set
-//                    Set<String> thumbUserUidSet  = getThumbUser.keySet();
-//                    // 채팅을 좋아요 한 목록에 현재 유저가 있을때, 채팅방의 고유 식별값을 리스트에 저장한다
-//                    if (thumbUserUidSet.contains(finalUid)) {
-//                        String chatUniqueKey = dataSnapshot.getKey();
-//                        thumbUserChatKeyList.add(chatUniqueKey);
-//                    }
-//                }
-//
-//                // chats 데이터베이스에서 unique key 가 일치하는 채팅방을 찾고,
-//                // 해당 채팅방 데이터의 변화를 감지하는 리스너를 실행시킴으로써 채팅데이터의 변화를 감지한다
-//                for (String chatUniqueKey: thumbUserChatKeyList) {
-//                    rootReference.child("chats").child(chatUniqueKey).addValueEventListener(new ValueEventListener() {
-//                        @Override
-//                        public void onDataChange(@NonNull DataSnapshot snapshot) {
-//                            Chat chat = snapshot.getValue(Chat.class);
-//                            String senderUid = chat.getLatestUid();
-//                            //System.out.println("@@@@@@@@@@@@@@@@@@@@ : "  + senderUid);
-//
-//                            // 본인이 작성한 메세지가 아닌것만 알림 실행
-//                            if (!senderUid.equals(uid)) {
-////                                    notificationMessage(chat);
-//                                // 오레오 이후 버전부터는 백그라운드에서의 작업이 제한된다
-//                                //
-//                                    setForegroundAsync(notificationMessage(chat));
-//                                // todo 포그라운드, 백그라운드 체크 후 작업 설정
-////                                if (appInForeground(getApplicationContext())) {
-////                                    System.out.println("################ 포그라운드");
-////                                    //setForegroundAsync(notificationMessage(chat));
-////
-////                                } else {
-////                                    System.out.println("################ 포그라운드 아님");
-////                                    //setForegroundAsync(notificationMessage(chat));
-////                                }
-//                            }
-//                        }
-//
-//                        @Override
-//                        public void onCancelled(@NonNull DatabaseError error) {
-//
-//                        }
-//                    });
-//                }
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError error) {
-//
-//            }
-//        });
+        final String finalUid = uid;
+        rootReference.child("thumb").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                // 각 채팅방의 좋아요 유저를 저장하는 데이터베이스에서
+                // 현재 로그인한 유저가 좋아요 한 채팅방의 unique key 값을 리스트에 저장한다
+                ArrayList<String> thumbUserChatKeyList = new ArrayList<>();
+                for (DataSnapshot dataSnapshot: snapshot.getChildren()) {
+                    // 한 채팅방의 좋아요 한 유저를 저장하는 map
+                    Map<String, Object> getThumbUser = (Map<String, Object>) dataSnapshot.getValue();
+                    // 좋아요한 유저의 uid 만 저장한 set
+                    Set<String> thumbUserUidSet  = getThumbUser.keySet();
+                    // 채팅을 좋아요 한 목록에 현재 유저가 있을때, 채팅방의 고유 식별값을 리스트에 저장한다
+                    if (thumbUserUidSet.contains(finalUid)) {
+                        String chatUniqueKey = dataSnapshot.getKey();
+                        thumbUserChatKeyList.add(chatUniqueKey);
+                    }
+                }
 
+                // chats 데이터베이스에서 unique key 가 일치하는 채팅방을 찾고,
+                // 해당 채팅방 데이터의 변화를 감지하는 리스너를 실행시킴으로써 채팅데이터의 변화를 감지한다
+                for (String chatUniqueKey: thumbUserChatKeyList) {
+                    rootReference.child("chats").child(chatUniqueKey).addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            Chat chat = snapshot.getValue(Chat.class);
+                            String senderUid = chat.getLatestUid();
+                            //System.out.println("@@@@@@@@@@@@@@@@@@@@ : "  + senderUid);
+
+                            // 본인이 작성한 메세지가 아닌것만 알림 실행
+                            if (!senderUid.equals(uid)) {
+//                                    notificationMessage(chat);
+                                // 오레오 이후 버전부터는 백그라운드에서의 작업이 제한된다
+                                //
+                                    setForegroundAsync(notificationMessage(chat));
+                                // todo 포그라운드, 백그라운드 체크 후 작업 설정
+//                                if (appInForeground(getApplicationContext())) {
+//                                    System.out.println("################ 포그라운드");
+//                                    //setForegroundAsync(notificationMessage(chat));
+//
+//                                } else {
+//                                    System.out.println("################ 포그라운드 아님");
+//                                    //setForegroundAsync(notificationMessage(chat));
+//                                }
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+         */
+
+        // Result.success() -> retry() 를 반환함으로써 어플리케이션이 종료 되어도 작업이 다시 실행할 수 있다
         return Result.retry();
     }
 
-    private boolean checkFirstMessage() {
+    // 해당 메소드가 최초로 실행될때만 true 를 반환, 이후 false 반환하게 함으로써
+    // 채팅 메세지 리스너의 onDataChange 에서 가장 처음 호출되는 기존메세지를 보여주는 작업을 실행하지 않도록 할 수 있다
+   private boolean checkFirstMessage() {
         if (firstMessage) {
             firstMessage = false;
             return true;
@@ -224,7 +212,7 @@ public class NotifyMessageWorker extends Worker {
         }
     }
 
-    // 새로운 메세지의 내용을 포함한 알림을 생성한다
+    // 새롭게 추가되는 채팅 메세지를 알림으로 표시한다
     private ForegroundInfo notificationMessage(Chat chat) {
         String title = chat.getTitle();
         String sender = chat.getLatestSender();
