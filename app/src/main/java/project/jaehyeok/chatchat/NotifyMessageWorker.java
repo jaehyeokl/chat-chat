@@ -68,9 +68,23 @@ public class NotifyMessageWorker extends Worker {
         Data data = getInputData();
         String chatUniqueKey = data.getString("chatUniqueKey");
         final String getUid = data.getString("uid");
+        // cancel 의 경우에는 알림 수신을 취소하는 요청일 경우에만 true 를 전달받는다
+        // 그렇게 때문에 수신 요청인 경우에는(null) defaultValue 를 false 가 되도록 한다
+        boolean cancel = data.getBoolean("cancel", false);
 
+        if (cancel) {
+            System.out.println("알림을 취소하겠다!!!1");
+            return Result.failure();
+        } else {
+            System.out.println("알림을 설정한다");
+        }
+        // todo 먼저 생성된 스레드를 대체할 수가 없다.
+        // 어플리케이션이 종료되어야 모든 스레드가 종료된다
+        // 작업자체는 리플레이스 되지만, 작업에서 리스너가 별도의 스레드로 생성이 되기 때문에 계속 남아서 메세지를 수신한다
+        // 해당 비동기를 찾아서 제거할 수 있는 방법을 찾아야 할 것 같다.
 
-        // 채팅방에 업로드되는
+        // 데이터베이스에서 chatUniqueKey 을 통해 식별되는 채팅방의 데이터 변화를 감지하는 리스너 실행
+        // 추가되는 메세지를 감지하여 알림을 실행시키기 위해 사용한다
         rootReference.child("chats").child(chatUniqueKey).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -199,6 +213,12 @@ public class NotifyMessageWorker extends Worker {
 
         // Result.success() -> retry() 를 반환함으로써 어플리케이션이 종료 되어도 작업이 다시 실행할 수 있다
         return Result.retry();
+    }
+
+    @Override
+    public void onStopped() {
+        super.onStopped();
+        Toast.makeText(getApplicationContext(), "작업이 취소됐을때", Toast.LENGTH_SHORT).show();
     }
 
     // 해당 메소드가 최초로 실행될때만 true 를 반환, 이후 false 반환하게 함으로써

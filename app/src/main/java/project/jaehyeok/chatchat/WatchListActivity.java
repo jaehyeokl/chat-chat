@@ -3,6 +3,9 @@ package project.jaehyeok.chatchat;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -11,6 +14,7 @@ import androidx.work.Data;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 import androidx.work.WorkRequest;
 
@@ -24,6 +28,7 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -32,8 +37,11 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import project.jaehyeok.chatchat.data.Chat;
@@ -166,13 +174,10 @@ public class WatchListActivity extends AppCompatActivity {
                             @Override
                             public void onLeftClicked(int position) {
                                 super.onLeftClicked(position);
-                                Toast.makeText(WatchListActivity.this, "왼쪽" + position, Toast.LENGTH_SHORT).show();
                                 // 버튼의 상태를 바꾸는것은 일단 방법이 생각나지 않는다,
                                 // 먼저 각 채팅방별로 알림 버튼 클릭시 현재 서비스의 유무를 판단하여 실행/취소 하는 것을 구현하자
                                 messageNotificationToggle(position);
-
-
-                                // 실시간데이터베이스에서 가장 첫 메세지(기존 메세지)는 반영되지 않도록 하는 방법 알아보기
+                                //Toast.makeText(WatchListActivity.this, "왼쪽" + position, Toast.LENGTH_SHORT).show();
                             }
 
                             @Override
@@ -393,28 +398,83 @@ public class WatchListActivity extends AppCompatActivity {
         String chatUniqueKey = dataSnapshot.getKey();
         String serviceName = uid + "_" + chatUniqueKey;
 
-        // NotifyMessageWorker 으로 전달할 데이터
-        // 각 채팅방별로 메세지를 수신할 수 있는 백그라운드 작업을 생성하기 위해서
-        // 채팅방을 식별할 수 있는 고유한 키값과, 현재 로그인한 계정의 uid 를 전달한다
-        Data.Builder builder = new Data.Builder()
-                .putString("chatUniqueKey", chatUniqueKey)
-                .putString("uid", uid);
-        Data data = builder.build();
+        WorkManager workManager = WorkManager.getInstance(getApplicationContext());
 
-        // 채팅 수신을 위한 WorkManager 구현
-        WorkRequest uploadWorkRequest = new OneTimeWorkRequest.Builder(NotifyMessageWorker.class)
-                .setInputData(data) // 데이터 전달
-                .build();
+        // serviceName 을 이름으로 가지는 채팅 메세지 수신 작업이 WorkManager 에 존재하는지 확인한다
+        if (isWorkScheduled(serviceName)) {
+            // 기존 작업이 존재할때(메세지 알림 수신 허용상태일때) 는 해당 작업 종료한다
 
-        //uploadWorkRequest.getId(); // 이건 뭘까?
 
-        WorkManager.getInstance(getApplicationContext())
-                .beginUniqueWork(
-                        serviceName,
-                        ExistingWorkPolicy.REPLACE,
-                        (OneTimeWorkRequest) uploadWorkRequest
-                )
-                .enqueue();
+
+            Data.Builder builder = new Data.Builder()
+                    .putString("chatUniqueKey", chatUniqueKey)
+                    .putString("uid", uid)
+                    .putBoolean("cancel", true);
+            Data data = builder.build();
+
+            // 채팅 수신을 위한 WorkManager 구현
+            WorkRequest uploadWorkRequest = new OneTimeWorkRequest.Builder(NotifyMessageWorker.class)
+                    .setInputData(data) // 데이터 전달
+                    .build();
+
+            workManager.beginUniqueWork(
+                    serviceName,
+                    ExistingWorkPolicy.REPLACE,
+                    (OneTimeWorkRequest) uploadWorkRequest
+            )
+                    .enqueue();
+
+//            workManager.cancelUniqueWork(serviceName);
+            Toast.makeText(this, "알림 취소", Toast.LENGTH_SHORT).show();
+
+        } else {
+            // 존재하지 않을때(기본값, 또는 메세지 수신 거부상태일때) 는 알림 수신작업을 새로 생성한다
+
+            // NotifyMessageWorker 으로 전달할 데이터
+            // 각 채팅방별로 메세지를 수신할 수 있는 백그라운드 작업을 생성하기 위해서
+            // 채팅방을 식별할 수 있는 고유한 키값과, 현재 로그인한 계정의 uid 를 전달한다
+            Data.Builder builder = new Data.Builder()
+                    .putString("chatUniqueKey", chatUniqueKey)
+                    .putString("uid", uid)
+                    .putBoolean("cancel", false);
+
+            Data data = builder.build();
+
+            // 채팅 수신을 위한 WorkManager 구현
+            WorkRequest uploadWorkRequest = new OneTimeWorkRequest.Builder(NotifyMessageWorker.class)
+                    .setInputData(data) // 데이터 전달
+                    .build();
+
+            workManager.beginUniqueWork(
+                            serviceName,
+                            ExistingWorkPolicy.REPLACE,
+                            (OneTimeWorkRequest) uploadWorkRequest
+                        )
+                        .enqueue();
+            Toast.makeText(this, "알림 허용", Toast.LENGTH_SHORT).show();
+        };
+    }
+
+    // serviceName 을 가지는 작업이 WorkManager 에 있는지 여부를 확인하는 메소드
+    // https://www.javaer101.com/article/7091621.html
+    private boolean isWorkScheduled(String serviceName) {
+        WorkManager instance = WorkManager.getInstance(getApplicationContext());
+        ListenableFuture<List<WorkInfo>> statuses = instance.getWorkInfosForUniqueWork(serviceName);
+        try {
+            boolean running = false;
+            List<WorkInfo> workInfoList = statuses.get();
+            for (WorkInfo workInfo : workInfoList) {
+                WorkInfo.State state = workInfo.getState();
+                running = state == WorkInfo.State.RUNNING | state == WorkInfo.State.ENQUEUED;
+            }
+            return running;
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+            return false;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     @Override
