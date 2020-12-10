@@ -83,19 +83,19 @@ public class WatchListActivity extends AppCompatActivity {
         chatMyChatRecyclerview = findViewById(R.id.chatMyChatRecyclerview);
 
 //        // 채팅 수신을 위한 WorkManager 구현
-        WorkRequest uploadWorkRequest = new OneTimeWorkRequest.Builder(NotifyMessageWorker.class)
-//                .setBackoffCriteria(
-//                        BackoffPolicy.EXPONENTIAL,
-//                        OneTimeWorkRequest.MIN_BACKOFF_MILLIS,
-//                        TimeUnit.MILLISECONDS)
-                .build();
-        WorkManager.getInstance(getApplicationContext())
-                .beginUniqueWork(
-                        "notifyChatMessage",
-                        ExistingWorkPolicy.REPLACE,
-                        (OneTimeWorkRequest) uploadWorkRequest
-                )
-                .enqueue();
+//        WorkRequest uploadWorkRequest = new OneTimeWorkRequest.Builder(NotifyMessageWorker.class)
+////                .setBackoffCriteria(
+////                        BackoffPolicy.EXPONENTIAL,
+////                        OneTimeWorkRequest.MIN_BACKOFF_MILLIS,
+////                        TimeUnit.MILLISECONDS)
+//                .build();
+//        WorkManager.getInstance(getApplicationContext())
+//                .beginUniqueWork(
+//                        "notifyChatMessage",
+//                        ExistingWorkPolicy.REPLACE,
+//                        (OneTimeWorkRequest) uploadWorkRequest
+//                )
+//                .enqueue();
 
 //        PeriodicWorkRequest saveRequest = new PeriodicWorkRequest.Builder(NotifyMessageWorker.class, 1, TimeUnit.HOURS)
 //                .build();
@@ -393,6 +393,9 @@ public class WatchListActivity extends AppCompatActivity {
         String chatUniqueKey = dataSnapshot.getKey();
         String serviceName = uid + "_" + chatUniqueKey;
 
+        // NotifyMessageWorker 으로 전달할 데이터
+        // 각 채팅방별로 메세지를 수신할 수 있는 백그라운드 작업을 생성하기 위해서
+        // 채팅방을 식별할 수 있는 고유한 키값과, 현재 로그인한 계정의 uid 를 전달한다
         Data.Builder builder = new Data.Builder()
                 .putString("chatUniqueKey", chatUniqueKey)
                 .putString("uid", uid);
@@ -400,23 +403,18 @@ public class WatchListActivity extends AppCompatActivity {
 
         // 채팅 수신을 위한 WorkManager 구현
         WorkRequest uploadWorkRequest = new OneTimeWorkRequest.Builder(NotifyMessageWorker.class)
-                .setInputData(data)
-//                .setBackoffCriteria(
-//                        BackoffPolicy.EXPONENTIAL,
-//                        OneTimeWorkRequest.MIN_BACKOFF_MILLIS,
-//                        TimeUnit.MILLISECONDS)
+                .setInputData(data) // 데이터 전달
                 .build();
 
-        uploadWorkRequest.getId();
+        //uploadWorkRequest.getId(); // 이건 뭘까?
 
         WorkManager.getInstance(getApplicationContext())
                 .beginUniqueWork(
-                        "notifyChatMessage",
+                        serviceName,
                         ExistingWorkPolicy.REPLACE,
                         (OneTimeWorkRequest) uploadWorkRequest
                 )
                 .enqueue();
-
     }
 
     @Override
