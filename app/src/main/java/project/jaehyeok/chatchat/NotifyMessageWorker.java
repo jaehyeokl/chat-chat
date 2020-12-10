@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.os.Build;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -112,9 +113,22 @@ public class NotifyMessageWorker extends Worker {
 
                         // 본인이 작성한 메세지는 알림에서 제외한다
                         if (!senderUid.equals(getUid)) {
-                            // 오레오 이후 버전부터는 백그라운드에서의 작업이 제한되기 때문에
-                            // 포그라운드 서비스로 전환시켜주어야 한다
-                            setForegroundAsync(notificationMessage(chat));
+                            if (appInForeground(getApplicationContext())) {
+                                // 채팅 어플리케이션이 포그라운드(화면에서 실행중)일 때
+                                System.out.println("################ 포그라운드");
+                                String title = chat.getTitle();
+                                String sender = chat.getLatestSender();
+                                String message = chat.getLatestMessage();
+                                String totalMessage = sender + " : " + message;
+                                Toast.makeText(getApplicationContext(), totalMessage, Toast.LENGTH_SHORT).show();
+                            } else {
+                                // 채팅 어플리케이션이 백그라운드일 때
+                                // 백그라운드에서는 알림메세지를 띄우도록 한다
+
+                                // 오레오 이후 버전부터는 백그라운드에서의 작업이 제한되기 때문에
+                                // 포그라운드 서비스로 전환시켜주어야 한다
+                                setForegroundAsync(notificationMessage(chat));
+                            }
                         }
                     }
                 }
