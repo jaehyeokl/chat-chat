@@ -58,6 +58,13 @@ public class MainActivity extends AppCompatActivity {
         // 파이어베이스 접근 권한 갖기
         firebaseAuth = FirebaseAuth.getInstance();
 
+        // 파이어베이스의 로그인 세션이 유지되어 있으면 자동 로그인
+        // 로그인 액티비티를 생략하고 바로 로그인 이후 채팅목록으로 이동
+        FirebaseUser user = firebaseAuth.getCurrentUser();
+        if (user != null) {
+            updateUI(user);
+        }
+
         // 구글 로그인 설정하기
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
