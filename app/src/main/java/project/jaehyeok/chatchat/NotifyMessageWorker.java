@@ -60,7 +60,6 @@ public class NotifyMessageWorker extends Worker {
         firebaseDatabase = FirebaseDatabase.getInstance();
         rootReference = firebaseDatabase.getReference();
 
-        // todo 파이어베이스를 통해 어플이 종료됐을때도 로그인 여부를 확인할 수 있는 방법 알아보기
         firebaseAuth = FirebaseAuth.getInstance();
 
         // WorkRequest 생성 시 setInputData 를 통하여 전달한 Data
@@ -89,14 +88,23 @@ public class NotifyMessageWorker extends Worker {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
 
-                // SharedPreferences 에 저장된 uid, 가장 최근에 로그인한 계정을 나타낸다
-                // onDataChange 가 실행될때마다 uid 를 새로 초기화한다
-                SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("firebaseAuth", Context.MODE_PRIVATE);
-                String uid = sharedPreferences.getString("uid",null);
+//                // SharedPreferences 에 저장된 uid, 가장 최근에 로그인한 계정을 나타낸다
+//                // onDataChange 가 실행될때마다 uid 를 새로 초기화한다
+//                SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("firebaseAuth", Context.MODE_PRIVATE);
+//                String uid = sharedPreferences.getString("uid",null);
 
-                // getUid (앱에서 채팅방의 메세지알림 수신여부를 선택한 계정의 uid) 와
-                // uid (가장 최근에 어플리케이션에 로그인한 계정의 uid) 가 일치할 경우에만 알림을 보여준다
-                if (getUid.equals(uid)) {
+                // 현재 어플리케이션에 로그인 된 계정이 있는지, 어떤 계정으로 로그인되어 있는지 확인한다
+                // 로그인 되어 있다면 해당 계정의 uid 를 가져온다
+                FirebaseUser currentUser = firebaseAuth.getCurrentUser();
+                String currentUid = "";
+                if (currentUser != null) {
+                    currentUid = currentUser.getUid();
+                }
+
+                // 알림 수신을 요청한 계정의 uid 가 현재 로그인된 계정의 uid 와 일치할 경우에만 실행되도록 한다
+                // 같은 디바이스에서 어플에 2개 이상의 계정으로 로그인 한 이력이 있는 상태에서 수신여부를 설정한 경우에는
+                // 현재 활성화된 계정에서 다른 계정의 메세지를 수신할 수 없도록 해야하기 때문
+                if (getUid.equals(currentUid)) {
 
                     // 파이어베이스 실시간 데이터베이스 리스너의 특성상 실행시 기존에 있던 데이터를 가장 먼저 가져온다
                     // 기존의 채팅메세지가 아닌 새로 추가되는 메세지만 알림으로 나타내는 것이 목적이기 때문에 처음에 호출되는 (기존)메세지는 제외한다
