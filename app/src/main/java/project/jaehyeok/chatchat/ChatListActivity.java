@@ -10,6 +10,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
@@ -60,6 +63,9 @@ public class ChatListActivity extends AppCompatActivity {
     private ArrayList<DataSnapshot> chatDataSnapShotByLatest;
     private String uid;
 
+    private ConnectivityManager connectivityManager;
+    private NetworkReceiver networkReceiver;
+
     private static final int CREATE_CHAT = 7000;
 
     @SuppressLint("ResourceType")
@@ -95,6 +101,16 @@ public class ChatListActivity extends AppCompatActivity {
         // 파이어베이스 DB 에서 uid 를 통해 계정 데이터의 저장여부를 확인 / 최초 로그인 여부를 판별한다
         // 최초 로그인일때 파이어베이스 DB 의 경로 users 에 새로운 유저 데이터를 생성한다
         verifyUserSavedDatabase(userProfile);
+
+        // 네트워크 상태 확인
+        // 네트워크 연결상태에 변화에 대한 System Broadcast 를 감지하는 리시버를 실행시킨다
+        // ex) wifi 연결상태, 셀룰러데이터 연결상태 변화
+        // 리시버에서는 모든 네트워크에 연결되지 않았을때 다시 연결될 때 까지 로딩화면을 띄우도록 구현
+        connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        IntentFilter checkNetworkFilter = new IntentFilter();
+        networkReceiver = new NetworkReceiver();
+        checkNetworkFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        registerReceiver(networkReceiver, checkNetworkFilter);
     }
 
     @Override
@@ -383,5 +399,13 @@ public class ChatListActivity extends AppCompatActivity {
     public void onBackPressed() {
         //super.onBackPressed();
         backPressHandler.onBackPressed();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        // 네트워크 연결상태를 확인하는 리시버를 종료해준다
+        unregisterReceiver(networkReceiver);
     }
 }

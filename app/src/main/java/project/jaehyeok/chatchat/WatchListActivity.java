@@ -19,10 +19,13 @@ import androidx.work.WorkManager;
 import androidx.work.WorkRequest;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Canvas;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -69,6 +72,8 @@ public class WatchListActivity extends AppCompatActivity {
     private WatchItemTouchHelper thumbChatItemTouchHelper = null;
     private WatchItemTouchHelper myChatItemTouchHelper = null;
 
+    private ConnectivityManager connectivityManager;
+    private NetworkReceiver networkReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,25 +95,15 @@ public class WatchListActivity extends AppCompatActivity {
         chatWatchListRecyclerview = findViewById(R.id.chatWatchListRecyclerview);
         chatMyChatRecyclerview = findViewById(R.id.chatMyChatRecyclerview);
 
-//        // 채팅 수신을 위한 WorkManager 구현
-//        WorkRequest uploadWorkRequest = new OneTimeWorkRequest.Builder(NotifyMessageWorker.class)
-////                .setBackoffCriteria(
-////                        BackoffPolicy.EXPONENTIAL,
-////                        OneTimeWorkRequest.MIN_BACKOFF_MILLIS,
-////                        TimeUnit.MILLISECONDS)
-//                .build();
-//        WorkManager.getInstance(getApplicationContext())
-//                .beginUniqueWork(
-//                        "notifyChatMessage",
-//                        ExistingWorkPolicy.REPLACE,
-//                        (OneTimeWorkRequest) uploadWorkRequest
-//                )
-//                .enqueue();
-
-//        PeriodicWorkRequest saveRequest = new PeriodicWorkRequest.Builder(NotifyMessageWorker.class, 1, TimeUnit.HOURS)
-//                .build();
-//        WorkManager.getInstance(getApplicationContext())
-//                .enqueue(saveRequest);
+        // 네트워크 상태 확인
+        // 네트워크 연결상태에 변화에 대한 System Broadcast 를 감지하는 리시버를 실행시킨다
+        // ex) wifi 연결상태, 셀룰러데이터 연결상태 변화
+        // 리시버에서는 모든 네트워크에 연결되지 않았을때 다시 연결될 때 까지 로딩화면을 띄우도록 구현
+        connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        IntentFilter checkNetworkFilter = new IntentFilter();
+        networkReceiver = new NetworkReceiver();
+        checkNetworkFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        registerReceiver(networkReceiver, checkNetworkFilter);
     }
 
     @Override
@@ -481,5 +476,12 @@ public class WatchListActivity extends AppCompatActivity {
     public void onBackPressed() {
         //super.onBackPressed();
         backPressHandler.onBackPressed();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // 네트워크 연결상태를 확인하는 리시버를 종료해준다
+        unregisterReceiver(networkReceiver);
     }
 }

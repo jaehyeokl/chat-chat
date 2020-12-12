@@ -2,7 +2,10 @@ package project.jaehyeok.chatchat;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -30,6 +33,9 @@ public class CreateChatActivity extends AppCompatActivity {
 
     private String masterUid;
 
+    private ConnectivityManager connectivityManager;
+    private NetworkReceiver networkReceiver;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,6 +54,16 @@ public class CreateChatActivity extends AppCompatActivity {
         // 이전 (ChatListActivity) 에서 Intent 통해 전달한 전달받은 uid
         Intent getIntent = getIntent();
         masterUid = getIntent.getStringExtra("uid");
+
+        // 네트워크 상태 확인
+        // 네트워크 연결상태에 변화에 대한 System Broadcast 를 감지하는 리시버를 실행시킨다
+        // ex) wifi 연결상태, 셀룰러데이터 연결상태 변화
+        // 리시버에서는 모든 네트워크에 연결되지 않았을때 다시 연결될 때 까지 로딩화면을 띄우도록 구현
+        connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        IntentFilter checkNetworkFilter = new IntentFilter();
+        networkReceiver = new NetworkReceiver();
+        checkNetworkFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        registerReceiver(networkReceiver, checkNetworkFilter);
     }
 
     @Override
@@ -120,5 +136,12 @@ public class CreateChatActivity extends AppCompatActivity {
         String chatOpenMessage = "채팅방이 생성되었습니다!";
         Message chatOpenBroadcast = new Message(true, chatOpenMessage);
         messagesReference.child(key).push().setValue(chatOpenBroadcast);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // 네트워크 연결상태를 확인하는 리시버를 종료해준다
+        unregisterReceiver(networkReceiver);
     }
 }
