@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.Group;
 import androidx.loader.content.CursorLoader;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
@@ -42,7 +43,10 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.gun0912.tedpermission.PermissionListener;
+import com.gun0912.tedpermission.TedPermission;
 
+import java.util.List;
 import java.util.zip.Inflater;
 
 import project.jaehyeok.chatchat.data.UserData;
@@ -66,9 +70,8 @@ public class UserProfileActivity extends AppCompatActivity {
 
     private GoogleSignInClient googleSignInClient;
 
-    public static final int PICK_FROM_ALBUM = 1;
-//    private static final int PICK_FROM_ALBUM = 2; //앨범에서 사진 가져오기
-//    private static final int CROP_FROM_CAMERA = 3; //가져온 사진을 자르기 위한 변수
+    private static final int PICK_FROM_ALBUM = 1;
+    private static final int PICK_FROM_CAMERA = 3;
 
     private Uri imageUri;
     private String pathUri;
@@ -76,9 +79,11 @@ public class UserProfileActivity extends AppCompatActivity {
     private ConnectivityManager connectivityManager;
     private NetworkReceiver networkReceiver;
 
+    private PermissionListener permissionListener;
     private BottomSheetDialog selectGalleryOrCameraDialog;
     private Button selectGalleryButton;
     private Button selectCameraButton;
+
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -159,6 +164,19 @@ public class UserProfileActivity extends AppCompatActivity {
         checkNetworkFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         registerReceiver(networkReceiver, checkNetworkFilter);
 
+        // 갤러리/ 카메라 권한 체크를 위한 리스너 초기화
+        permissionListener = new PermissionListener() {
+            @Override
+            public void onPermissionGranted() {
+                //Toast.makeText(UserProfileActivity.this, "권한 허가", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onPermissionDenied(List<String> deniedPermissions) {
+                //Toast.makeText(UserProfileActivity.this, "권한 거부\n" + deniedPermissions.toString(), Toast.LENGTH_SHORT).show();
+            }
+        };
+
         // BottomSheetDialog (카메라/ 앨범 선택)
         // 프로필사진 설정 시 카메라촬영 또는 앨범에서 가져오도록 선택하는 다이얼로그
         LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -166,19 +184,37 @@ public class UserProfileActivity extends AppCompatActivity {
         selectGalleryOrCameraDialog = new BottomSheetDialog(UserProfileActivity.this);
         selectGalleryOrCameraDialog.setContentView(selectDialogView);
         selectGalleryOrCameraDialog.create();
+
         // 다이얼로그에서 앨범을 선택했을때
         selectDialogView.findViewById(R.id.selectGalleryButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // 앨범 접근 권한 여부 체크
+                TedPermission.with(getApplicationContext())
+                        .setPermissionListener(permissionListener)
+                        .setRationaleMessage("앨범에 접근하기 위해서는\n접근 권한이 필요합니다")
+                        .setDeniedMessage("설정에서 앨범 접근 권한을 허용해주세요")
+                        .setPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
+                        .check();
+
                 gotoAlbum();
                 selectGalleryOrCameraDialog.dismiss();
             }
         });
+
         // 다이얼로그에서 카메라를 선택했을때
         selectDialogView.findViewById(R.id.selectCameraButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                gotoCamera();
+                // 카메라 권한 여부 체크
+                TedPermission.with(getApplicationContext())
+                        .setPermissionListener(permissionListener)
+                        .setRationaleMessage("카메라에 접근하기 위해서는\n접근 권한이 필요합니다")
+                        .setDeniedMessage("설정에서 카메라 권한을 허용해주세요")
+                        .setPermissions(Manifest.permission.CAMERA)
+                        .check();
+
+                gotoCamera();
                 selectGalleryOrCameraDialog.dismiss();
             }
         });
@@ -267,6 +303,11 @@ public class UserProfileActivity extends AppCompatActivity {
                 }
                 break;
             }
+            case PICK_FROM_CAMERA: {// 카메라로 촬영하여 가져올때
+                Toast.makeText(this, "카메라 촬영", Toast.LENGTH_SHORT).show();
+            }
+            default:
+                break;
         }
     }
 
@@ -288,6 +329,11 @@ public class UserProfileActivity extends AppCompatActivity {
         Intent intent = new Intent(Intent.ACTION_PICK);
         intent.setType(MediaStore.Images.Media.CONTENT_TYPE);
         startActivityForResult(intent, PICK_FROM_ALBUM);
+    }
+
+    private void gotoCamera() {
+        Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+        startActivityForResult(intent, PICK_FROM_CAMERA);
     }
 
     private void signOut() {
