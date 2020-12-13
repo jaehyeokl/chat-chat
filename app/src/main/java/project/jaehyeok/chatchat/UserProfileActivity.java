@@ -16,10 +16,12 @@ import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -29,6 +31,8 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -38,6 +42,8 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+
+import java.util.zip.Inflater;
 
 import project.jaehyeok.chatchat.data.UserData;
 
@@ -69,6 +75,10 @@ public class UserProfileActivity extends AppCompatActivity {
 
     private ConnectivityManager connectivityManager;
     private NetworkReceiver networkReceiver;
+
+    private BottomSheetDialog selectGalleryOrCameraDialog;
+    private Button selectGalleryButton;
+    private Button selectCameraButton;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -148,6 +158,30 @@ public class UserProfileActivity extends AppCompatActivity {
         networkReceiver = new NetworkReceiver();
         checkNetworkFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         registerReceiver(networkReceiver, checkNetworkFilter);
+
+        // BottomSheetDialog (카메라/ 앨범 선택)
+        // 프로필사진 설정 시 카메라촬영 또는 앨범에서 가져오도록 선택하는 다이얼로그
+        LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View selectDialogView = inflater.inflate(R.layout.select_gallery_camera_dialog, null, false);
+        selectGalleryOrCameraDialog = new BottomSheetDialog(UserProfileActivity.this);
+        selectGalleryOrCameraDialog.setContentView(selectDialogView);
+        selectGalleryOrCameraDialog.create();
+        // 다이얼로그에서 앨범을 선택했을때
+        selectDialogView.findViewById(R.id.selectGalleryButton).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                gotoAlbum();
+                selectGalleryOrCameraDialog.dismiss();
+            }
+        });
+        // 다이얼로그에서 카메라를 선택했을때
+        selectDialogView.findViewById(R.id.selectCameraButton).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+//                gotoCamera();
+                selectGalleryOrCameraDialog.dismiss();
+            }
+        });
     }
 
     @Override
@@ -160,7 +194,8 @@ public class UserProfileActivity extends AppCompatActivity {
             findViewById(id).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    gotoAlbum();
+                    // 프로필 이미지를 가져올 방식을 선택하는 BottomSheetDialog 를 보여준다 (앨범/카메라)
+                    selectGalleryOrCameraDialog.show();
                 }
             });
         }
@@ -248,6 +283,7 @@ public class UserProfileActivity extends AppCompatActivity {
         return cursor.getString(index);
     }
 
+    // 갤러리에서 프로필사진 불러오기
     private void gotoAlbum() {
         Intent intent = new Intent(Intent.ACTION_PICK);
         intent.setType(MediaStore.Images.Media.CONTENT_TYPE);
