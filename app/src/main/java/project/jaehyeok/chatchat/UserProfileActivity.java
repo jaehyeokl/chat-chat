@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.Group;
+import androidx.core.content.FileProvider;
 import androidx.loader.content.CursorLoader;
 
 import android.Manifest;
@@ -13,9 +14,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -46,6 +49,10 @@ import com.google.firebase.storage.UploadTask;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.zip.Inflater;
 
@@ -83,6 +90,9 @@ public class UserProfileActivity extends AppCompatActivity {
     private BottomSheetDialog selectGalleryOrCameraDialog;
     private Button selectGalleryButton;
     private Button selectCameraButton;
+
+    private String currentPhotoPath;
+
 
 
     @SuppressLint("ClickableViewAccessibility")
@@ -173,7 +183,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
             @Override
             public void onPermissionDenied(List<String> deniedPermissions) {
-                //Toast.makeText(UserProfileActivity.this, "권한 거부\n" + deniedPermissions.toString(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(UserProfileActivity.this, "권한 거부\n" + deniedPermissions.toString(), Toast.LENGTH_SHORT).show();
             }
         };
 
@@ -304,7 +314,23 @@ public class UserProfileActivity extends AppCompatActivity {
                 break;
             }
             case PICK_FROM_CAMERA: {// 카메라로 촬영하여 가져올때
-                Toast.makeText(this, "카메라 촬영", Toast.LENGTH_SHORT).show();
+                if (data != null) {
+                    // 촬영한 사진 파일
+                    File file = new File(currentPhotoPath);
+                    Bitmap bitmap = null;
+
+                    try {
+                        // ContentResolver 통해 파일에 저장된 사진을 비트맵으로 가져온다
+                        bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), Uri.fromFile(file));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    if (bitmap != null) {
+                        userProfileImage.setImageBitmap(bitmap);
+                    }
+                }
+                break;
             }
             default:
                 break;
@@ -313,7 +339,6 @@ public class UserProfileActivity extends AppCompatActivity {
 
     // uri 절대경로 가져오기
     public String getPath(Uri uri) {
-
         String[] projection = {MediaStore.Images.Media.DATA};
         CursorLoader cursorLoader = new CursorLoader(this, uri, projection, null, null, null);
 
@@ -331,9 +356,48 @@ public class UserProfileActivity extends AppCompatActivity {
         startActivityForResult(intent, PICK_FROM_ALBUM);
     }
 
+    // 카메라에서 촬영하기(원본이미지 가져오기)
     private void gotoCamera() {
-        Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-        startActivityForResult(intent, PICK_FROM_CAMERA);
+//        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+//        Uri providerURI = FileProvider.getUriForFile(getApplicationContext() ,getPackageName() , photoFile);
+//        intent.putExtra(MediaStore.EXTRA_OUTPUT , providerURI);
+//        startActivityForResult(intent, PICK_FROM_CAMERA);
+
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        // 촬영한 사진이 저장될 파일생성
+        File photoFile = null;
+        try {
+            photoFile = createImageFile();
+        } catch (IOException ex) {
+
+        }
+
+        // FileProvider 를 통해 사진을 저장하기위한 파일의 Uri 를 얻는다
+        // Uri 를 Intent 에 전달하여 촬영된 사진이 Uri 를 통해 해당 파일에 저장되도록 한다
+        if (photoFile != null) {
+            Uri photoURI = FileProvider.getUriForFile(this,
+                    "project.jaehyeok.chatchat.fileprovider",
+                    photoFile);
+            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+            startActivityForResult(takePictureIntent, PICK_FROM_CAMERA);
+        }
+    }
+
+    // 촬영한 사진을 저장할 파일 생성
+    private File createImageFile() throws IOException {
+        // 촬영한 사진을 저장할 파일명
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File imageFile = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        currentPhotoPath = imageFile.getAbsolutePath();
+        return imageFile;
     }
 
     private void signOut() {

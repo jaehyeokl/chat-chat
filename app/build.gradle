@@ -60,5 +60,8 @@ dependencies {
     implementation "androidx.work:work-runtime:2.4.0"
     implementation "androidx.work:work-gcm:2.4.0"
     implementation 'com.google.android.material:material:1.3.0-alpha01'
+    // 권한 체크
     implementation 'gun0912.ted:tedpermission:2.2.1'
+    // crop
+    implementation 'com.github.yalantis:ucrop:2.2.6'
 }
