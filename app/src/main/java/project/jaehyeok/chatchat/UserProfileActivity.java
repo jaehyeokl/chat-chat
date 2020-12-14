@@ -51,6 +51,7 @@ import com.gun0912.tedpermission.TedPermission;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -78,7 +79,8 @@ public class UserProfileActivity extends AppCompatActivity {
     private GoogleSignInClient googleSignInClient;
 
     private static final int PICK_FROM_ALBUM = 1;
-    private static final int PICK_FROM_CAMERA = 3;
+    private static final int PICK_FROM_CAMERA = 2;
+    private static final int PICK_IMAGE_CROP = 3;
 
     private Uri imageUri;
     private String pathUri;
@@ -92,6 +94,7 @@ public class UserProfileActivity extends AppCompatActivity {
     private Button selectCameraButton;
 
     private String currentPhotoPath;
+    private boolean getAlbumForCrop = false;
 
 
 
@@ -281,11 +284,14 @@ public class UserProfileActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         switch (requestCode) {
-            case PICK_FROM_ALBUM: { // 갤러리에서 이미지 가져왔을때
+            case PICK_FROM_ALBUM: { // 갤러리에서 프로필로 사용할 이미지 가져왔을때
                 if (data != null) {
                     imageUri = data.getData();
                     pathUri = getPath(imageUri);
                     userProfileImage.setImageURI(imageUri);
+
+                    // 이미지 크롭하기
+                    //cropImage();
 //                    Bitmap bitmap = null;
 //                    try {
 //                        bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
@@ -313,7 +319,7 @@ public class UserProfileActivity extends AppCompatActivity {
                 }
                 break;
             }
-            case PICK_FROM_CAMERA: {// 카메라로 촬영하여 가져올때
+            case PICK_FROM_CAMERA: {// 카메라로 프로필사진 촬영하여 가져올때
                 if (data != null) {
                     // 촬영한 사진 파일
                     File file = new File(currentPhotoPath);
@@ -329,8 +335,14 @@ public class UserProfileActivity extends AppCompatActivity {
                     if (bitmap != null) {
                         userProfileImage.setImageBitmap(bitmap);
                     }
+
+                    // 파일 크롭하기
+                    //cropImage();
                 }
                 break;
+            }
+            case PICK_IMAGE_CROP: {
+
             }
             default:
                 break;
@@ -390,6 +402,10 @@ public class UserProfileActivity extends AppCompatActivity {
         String imageFileName = "JPEG_" + timeStamp + "_";
 
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        /*// 기종마다 DIRECTORY_PICTURES 디렉토리가 가 존재하지 않아 에러가 발생하는 경우가 있음
+        // 아래 getExternalStorageDirectory 메소드로 외부 저장소의 가장 상위디렉토리를 호출함으로써
+        // 에러가 발생할 경우를 예방할 수 있다
+//        File storageDir = new File(Environment.getExternalStorageDirectory(), imageFileName);*/
         File imageFile = File.createTempFile(
                 imageFileName,  /* prefix */
                 ".jpg",         /* suffix */
@@ -399,6 +415,40 @@ public class UserProfileActivity extends AppCompatActivity {
         currentPhotoPath = imageFile.getAbsolutePath();
         return imageFile;
     }
+
+    /*
+    // 이미지 크롭하기 (작동 X)
+    // https://stackoverflow.com/questions/40109668/how-to-crop-the-image-in-android-marshmallow-by-using-default-crop-intent
+    // there is no "default crop" in Android / 모든 기기가 crop Intent 를 지원하지 않는다
+    // todo 크롭기능은 라이브러리를 이용
+    private void cropImage() {
+        Intent cropIntent = new Intent("com.android.camera.action.CROP");
+
+        cropIntent.setDataAndType(imageUri, "image/*");
+        cropIntent.putExtra("outputX", 200);
+        cropIntent.putExtra("outputY", 200);
+        cropIntent.putExtra("aspectX", 1);
+        cropIntent.putExtra("aspectY", 1);
+        cropIntent.putExtra("scale", true);
+
+        if (getAlbumForCrop) {
+            // 앨범에서 사진을 불러와서 크롭할때
+            cropIntent.putExtra("output", imageUri);
+        } else {
+            // 카메라에서 촬영한 사진을 크롭할때
+            cropIntent.putExtra("output", imageUri);
+        }
+
+        cropIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        cropIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+//        grantUriPermission(getPackageName()+".fileprovider", imageUri, Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+
+//        if (cropIntent.resolveActivity(getPackageManager()) != null) {
+//            startActivityForResult(cropIntent, PICK_IMAGE_CROP);
+//        }
+        startActivityForResult(cropIntent, PICK_IMAGE_CROP);
+    }
+     */
 
     private void signOut() {
         // 파이어베이스 로그아웃
