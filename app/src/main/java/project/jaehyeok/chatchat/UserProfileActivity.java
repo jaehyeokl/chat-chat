@@ -291,8 +291,6 @@ public class UserProfileActivity extends AppCompatActivity {
                     pathUri = getPath(imageUri);
                     userProfileImage.setImageURI(imageUri);
 
-                    // 이미지 크롭하기
-                    //cropImage();
 //                    Bitmap bitmap = null;
 //                    try {
 //                        bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
@@ -327,6 +325,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
                     // 촬영한 사진 원본으로 가져와 ImageView 적용하는 코드
                     // 크롭기능 사용으로 인해 주석처리
+                    /*
 //                    Bitmap bitmap = null;
 //                    try {
 //                        // ContentResolver 통해 파일에 저장된 사진을 비트맵으로 가져온다
@@ -338,6 +337,7 @@ public class UserProfileActivity extends AppCompatActivity {
 //                    if (bitmap != null) {
 //                        userProfileImage.setImageBitmap(bitmap);
 //                    }
+                     */
 
                     // 촬영한 이미지 크롭하기 메소드
                     // 첫번째 인자는 크롭할 이미지의 Uri, 두번째 인자는 크롭한 이미지를 저장할 Uri
@@ -355,12 +355,30 @@ public class UserProfileActivity extends AppCompatActivity {
             }
             case PICK_IMAGE_CROP: {// 이미지를 크롭했을때
                 if (data != null) {
+                    // UCrop 라이브러리를 통해 크롭한 이미지의 Uri 을 불러온다
                     Uri getCropImageUri = UCrop.getOutput(data);
 
                     Glide.with(getApplicationContext())
                             .load(getCropImageUri)
                             .circleCrop()
                             .into(userProfileImage);
+
+                    // 파이어베이스 storage profile_image 폴더에 해당 유저의 uid 로 프로필 이미지를 저장한다
+                    // 저장할때 uid 로 이름을 지정하여, 프로필 이미지 변경시에는 기존파일에 덮어씌우도록 한다
+                    StorageReference storageRef = storageReference.child(getString(R.string.storage_path_profile_image) + uid);
+                    UploadTask uploadTask = storageRef.putFile(getCropImageUri);
+
+                    uploadTask.addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+
+                        }
+                    }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                            //
+                        }
+                    });
                 }
             }
             default:
@@ -389,11 +407,6 @@ public class UserProfileActivity extends AppCompatActivity {
 
     // 카메라에서 촬영하기(원본이미지 가져오기)
     private void gotoCamera() {
-//        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-//        Uri providerURI = FileProvider.getUriForFile(getApplicationContext() ,getPackageName() , photoFile);
-//        intent.putExtra(MediaStore.EXTRA_OUTPUT , providerURI);
-//        startActivityForResult(intent, PICK_FROM_CAMERA);
-
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // 촬영한 사진이 저장될 파일생성
         File photoFile = null;
@@ -412,6 +425,16 @@ public class UserProfileActivity extends AppCompatActivity {
             takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
             startActivityForResult(takePictureIntent, PICK_FROM_CAMERA);
         }
+
+        // 썸네일만 필요할때, 파일 따로 생성하지 않는다
+        // onActivityResult 에서 data.getData() 으로 썸네일 이미지를 가져올 수 있다
+        /*
+//        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+//        Uri providerURI = FileProvider.getUriForFile(getApplicationContext() ,getPackageName() , photoFile);
+//        intent.putExtra(MediaStore.EXTRA_OUTPUT , providerURI);
+//        startActivityForResult(intent, PICK_FROM_CAMERA);
+         */
+
     }
 
     // 촬영한 사진을 저장할 파일 생성
