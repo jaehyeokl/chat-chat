@@ -91,13 +91,8 @@ public class UserProfileActivity extends AppCompatActivity {
 
     private PermissionListener permissionListener;
     private BottomSheetDialog selectGalleryOrCameraDialog;
-    private Button selectGalleryButton;
-    private Button selectCameraButton;
 
     private String currentPhotoPath;
-    private boolean getAlbumForCrop = false;
-
-
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
