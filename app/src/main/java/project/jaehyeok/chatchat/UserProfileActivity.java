@@ -48,6 +48,7 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
+import com.yalantis.ucrop.UCrop;
 
 import java.io.File;
 import java.io.IOException;
@@ -323,26 +324,44 @@ public class UserProfileActivity extends AppCompatActivity {
                 if (data != null) {
                     // 촬영한 사진 파일
                     File file = new File(currentPhotoPath);
-                    Bitmap bitmap = null;
 
-                    try {
-                        // ContentResolver 통해 파일에 저장된 사진을 비트맵으로 가져온다
-                        bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), Uri.fromFile(file));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    // 촬영한 사진 원본으로 가져와 ImageView 적용하는 코드
+                    // 크롭기능 사용으로 인해 주석처리
+//                    Bitmap bitmap = null;
+//                    try {
+//                        // ContentResolver 통해 파일에 저장된 사진을 비트맵으로 가져온다
+//                        bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), Uri.fromFile(file));
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+//
+//                    if (bitmap != null) {
+//                        userProfileImage.setImageBitmap(bitmap);
+//                    }
 
-                    if (bitmap != null) {
-                        userProfileImage.setImageBitmap(bitmap);
-                    }
+                    // 촬영한 이미지 크롭하기 메소드
+                    // 첫번째 인자는 크롭할 이미지의 Uri, 두번째 인자는 크롭한 이미지를 저장할 Uri
+                    // 사진을 크롭하고  같은 Uri 에 덮어쓰기 한다
+                    // onActivityResult 에서 RequestCode == UCrop.REQUEST_CROP 에서 data 로 받을 수 있다
 
-                    // 파일 크롭하기
-                    //cropImage();
+                    // Error) java.lang.IllegalArgumentException: Invalid Uri schemenull
+                    // Uri 를 파일에서 가져와야 정상적으로 작동한다
+                    // https://stackoverflow.com/questions/46996601/how-to-give-assets-uri-in-yalantis-ucrop
+                    //Uri imageUri = Uri.parse(currentPhotoPath);
+                    Uri imageUri = Uri.fromFile(file);
+                    openCropActivity(imageUri, imageUri);
                 }
                 break;
             }
-            case PICK_IMAGE_CROP: {
+            case PICK_IMAGE_CROP: {// 이미지를 크롭했을때
+                if (data != null) {
+                    Uri getCropImageUri = UCrop.getOutput(data);
 
+                    Glide.with(getApplicationContext())
+                            .load(getCropImageUri)
+                            .circleCrop()
+                            .into(userProfileImage);
+                }
             }
             default:
                 break;
@@ -414,6 +433,15 @@ public class UserProfileActivity extends AppCompatActivity {
 
         currentPhotoPath = imageFile.getAbsolutePath();
         return imageFile;
+    }
+
+    // 이미지 크롭하기
+    // 갤러리에서 불러온 사진이나, 카메모로 촬영한 사진을 크롭한다
+    private void openCropActivity(Uri sourceUri, Uri destinationUri) {
+        UCrop.of(sourceUri, destinationUri)
+                .withMaxResultSize(100,100)
+                .withAspectRatio(5f, 5f)
+                .start(UserProfileActivity.this, PICK_IMAGE_CROP);
     }
 
     /*
