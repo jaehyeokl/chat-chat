@@ -289,8 +289,15 @@ public class UserProfileActivity extends AppCompatActivity {
                 if (data != null) {
                     imageUri = data.getData();
                     pathUri = getPath(imageUri);
-                    userProfileImage.setImageURI(imageUri);
+//                    userProfileImage.setImageURI(imageUri);
+                    // Glide 라이브러리를 통해 이미지를 둥글게 만들어 뷰에 적용한다
+                    Glide.with(getApplicationContext())
+                            .load(pathUri)
+                            .circleCrop()
+                            .into(userProfileImage);
 
+                    // 이미지를 불러오는 다른 방법(참고)
+                    /*
 //                    Bitmap bitmap = null;
 //                    try {
 //                        bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
@@ -298,6 +305,7 @@ public class UserProfileActivity extends AppCompatActivity {
 //                    } catch (IOException e) {
 //                        e.printStackTrace();
 //                    }
+                     */
 
                     // 파이어베이스 storage profile_image 폴더에 해당 유저의 uid 로 프로필 이미지를 저장한다
                     // 저장할때 uid 로 이름을 지정하여, 프로필 이미지 변경시에는 기존파일에 덮어씌우도록 한다
@@ -357,7 +365,7 @@ public class UserProfileActivity extends AppCompatActivity {
                 if (data != null) {
                     // UCrop 라이브러리를 통해 크롭한 이미지의 Uri 을 불러온다
                     Uri getCropImageUri = UCrop.getOutput(data);
-
+                    // Glide 라이브러리를 통해 이미지를 둥글게 만들어 뷰에 적용한다
                     Glide.with(getApplicationContext())
                             .load(getCropImageUri)
                             .circleCrop()
@@ -386,7 +394,7 @@ public class UserProfileActivity extends AppCompatActivity {
         }
     }
 
-    // uri 절대경로 가져오기
+    // uri 절대경로를 반환한다
     public String getPath(Uri uri) {
         String[] projection = {MediaStore.Images.Media.DATA};
         CursorLoader cursorLoader = new CursorLoader(this, uri, projection, null, null, null);
@@ -458,7 +466,7 @@ public class UserProfileActivity extends AppCompatActivity {
         return imageFile;
     }
 
-    // 이미지 크롭하기
+    // 이미지 크롭하기 UCrop 라이브러리
     // 갤러리에서 불러온 사진이나, 카메모로 촬영한 사진을 크롭한다
     private void openCropActivity(Uri sourceUri, Uri destinationUri) {
         UCrop.of(sourceUri, destinationUri)
@@ -467,8 +475,9 @@ public class UserProfileActivity extends AppCompatActivity {
                 .start(UserProfileActivity.this, PICK_IMAGE_CROP);
     }
 
-    /*
     // 이미지 크롭하기 (작동 X)
+    /*
+
     // https://stackoverflow.com/questions/40109668/how-to-crop-the-image-in-android-marshmallow-by-using-default-crop-intent
     // there is no "default crop" in Android / 모든 기기가 crop Intent 를 지원하지 않는다
     // todo 크롭기능은 라이브러리를 이용
