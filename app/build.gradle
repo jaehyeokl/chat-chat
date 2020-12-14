@@ -63,8 +63,10 @@ dependencies {
     implementation 'com.google.android.material:material:1.3.0-alpha01'
     // 권한 체크
     implementation 'gun0912.ted:tedpermission:2.2.1'
-    // UCrop
+    // UCrop (이미지 크롭기능)
     implementation 'com.github.yalantis:ucrop:2.2.6'
-    // 애드몹
+    // 애드몹 (광고 추가)
     implementation 'com.google.android.gms:play-services-ads:19.5.0'
+    // Jsoup (웹 크롤링)
+    implementation 'org.jsoup:jsoup:1.13.1'
 }

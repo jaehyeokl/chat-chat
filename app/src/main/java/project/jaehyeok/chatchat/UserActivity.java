@@ -7,11 +7,17 @@ import androidx.constraintlayout.widget.Group;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -31,6 +37,14 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
+import java.io.IOException;
+import java.util.ArrayList;
+
 import project.jaehyeok.chatchat.data.UserData;
 
 public class UserActivity extends AppCompatActivity {
@@ -39,6 +53,7 @@ public class UserActivity extends AppCompatActivity {
     private ImageView userProfileImage;
     private TextView userProfileName;
     private TextView userProfileEmail;
+    private ListView realtimeHotTopicList;
 
     private BottomNavigationView bottomNavigation;
     private BackPressHandler backPressHandler = new BackPressHandler(this);
@@ -50,6 +65,13 @@ public class UserActivity extends AppCompatActivity {
     private FirebaseStorage firebaseStorage;
     private StorageReference storageReference;
 
+    private Handler getTopicListHandler;
+    private Elements contents;
+    private Document doc = null;
+
+    private ArrayList<String> topicListData;
+    private ArrayAdapter topicListAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,14 +81,19 @@ public class UserActivity extends AppCompatActivity {
         userProfileImage = findViewById(R.id.userProfileImage);
         userProfileName = findViewById(R.id.userProfileName);
         userProfileEmail = findViewById(R.id.userProfileEmail);
+        realtimeHotTopicList = findViewById(R.id.realtimeHotTopicListview);
 
-        // 프로필사진 테두리 둥글게 만들기
-//        userProfileImage.setBackground(new ShapeDrawable(new OvalShape()));
-//        userProfileImage.setClipToOutline(true);
-//
-//        GradientDrawable drawable= (GradientDrawable) getApplicationContext().getDrawable(R.drawable.profile_image_border);
-//        userProfileImage.setBackground(drawable);
-//        userProfileImage.setClipToOutline(true);
+        // 실시간 토픽 순위 (네이버 전체연령 검색어 순위를 크롤링하여 보여준다)
+        // 리스트뷰 데이터, 어댑터 연결
+        topicListData = new ArrayList<>(); // 순위를 보여줄 리스트뷰 데이터
+        System.out.println(topicListData.size() + "@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+        topicListAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, topicListData);
+        realtimeHotTopicList.setAdapter(topicListAdapter);
+
+        // 실시간 토픽을 크롤링할 스레드 실행 및 수신 핸들러 초기화
+        getTopicListHandler = new Handler(Looper.getMainLooper());
+        GetTopicListThread getTopicListThread = new GetTopicListThread();
+        getTopicListThread.start();
 
         // 네비게이션의 아이콘이 유저아이콘에 포커스되어있도록 설정
         bottomNavigation = findViewById(R.id.bottomNavigation);
@@ -133,6 +160,66 @@ public class UserActivity extends AppCompatActivity {
         AdView adView = (AdView) findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
         adView.loadAd(adRequest);
+    }
+
+    // 네이버 실시간 검색어 순위를 크롤링하는 스레드 (10초마다 새로고침 되도록 적용)
+    //
+    class GetTopicListThread extends Thread {
+        Handler receiveHandler = getTopicListHandler ;
+
+        @Override
+        public void run() {
+            String targetUrl = "https://datalab.naver.com/keyword/realtimeList.naver";
+            int getTopicNum = 10; // 실시간 검색어 10위까지 보여준다
+
+            while (true) {
+
+                // 크롤링 한 검색어 키워드를 리스트뷰 어댑터에 연결된 데이터에 저정한다
+                // 이후 리스트뷰 어댑터를 새로고침하도록 정의된 Runnable 전달함으로써 실시간 순위를 반영한다
+                try {
+                    doc = Jsoup.connect(targetUrl).get(); // 크롤링할 페이지를 불러온다
+                    // <ul class="ranking_list">
+                    //    <span class="item_title> '키워드' </span>
+                    contents = doc.select("li.ranking_item span.item_title");
+
+                    int count = 0;
+                    for(Element element: contents) {
+                        String topic = (count + 1) + ".  " + element.text();
+
+                        if (topicListData.size() == 10) {
+                            // 새로운 데이터로 덮어씌울때
+                            topicListData.set(count, topic);
+                        } else {
+                            // 크롤링한 데이터가 가장 처음 리스트에 저장될때
+                            topicListData.add(count, topic);
+                        }
+                        count++;
+
+                        if (count == getTopicNum) {
+                            break;
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                // 토픽리스트를 새로고침하도록 하는 runnable 정의 및 전달
+                Runnable runnable = new Runnable() {
+                    @Override
+                    public void run() {
+                        topicListAdapter.notifyDataSetChanged();
+                    }
+                };
+                receiveHandler.post(runnable);
+
+                try {
+                    // 10초뒤 반복실행
+                    Thread.sleep(10000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     @Override
