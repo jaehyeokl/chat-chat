@@ -6,7 +6,7 @@ public class Chat {
     public String title;
     public int personnel;
     public int thumb;
-    public long deleteAt;
+//    public long deleteAt;
     public String latestMessage = "";
     public String latestSender = "";
     public String latestUid = "";
@@ -41,9 +41,9 @@ public class Chat {
         return thumb;
     }
 
-    public long getDeleteAt() {
-        return deleteAt;
-    }
+//    public long getDeleteAt() {
+//        return deleteAt;
+//    }
 
     public String getLatestMessage() {
         return latestMessage;
